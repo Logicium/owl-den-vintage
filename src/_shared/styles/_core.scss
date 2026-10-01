@@ -1,0 +1,110 @@
+// =========================================================================
+// _core.scss — shared Sass toolkit for every Archetype stylesheet.
+// Emits no CSS on its own. `@use` it from base.scss / elevate.scss /
+// template themes.scss files:
+//
+//   @use '../../../archetype-shared/src/styles/core' as *;   (from a template)
+//   @use './core' as *;                                      (from shared)
+// =========================================================================
+
+@use 'sass:map';
+@use 'sass:math';
+
+// ── Breakpoints ──────────────────────────────────────────────────────────
+$breakpoints: (
+  'sm': 560px,
+  'md': 760px,
+  'lg': 1024px,
+  'xl': 1280px,
+);
+
+/// Max-width media query. `@include below('md') { … }`
+@mixin below($name) {
+  @media (max-width: map.get($breakpoints, $name)) {
+    @content;
+  }
+}
+
+/// Min-width media query. `@include above('md') { … }`
+@mixin above($name) {
+  @media (min-width: map.get($breakpoints, $name) + 1px) {
+    @content;
+  }
+}
+
+// ── Scoping helpers ──────────────────────────────────────────────────────
+
+/// Scope a block to one or more themes at the html level.
+/// `@include theme(atlas) { .ap-btn { … } }` → `[data-theme='atlas'] .ap-btn`
+@mixin theme($names...) {
+  @each $n in $names {
+    [data-theme='#{$n}'] {
+      @content;
+    }
+  }
+}
+
+/// Scope a block to bold-energy swatches (the Bold color category).
+@mixin bold-energy {
+  [data-swatch-energy='bold'] {
+    @content;
+  }
+}
+
+// ── Typography ───────────────────────────────────────────────────────────
+
+/// Monospaced micro-label: the uppercase tracked metadata voice.
+@mixin mono-label($size: 0.7rem, $tracking: 0.18em) {
+  font-family: var(--ap-font-mono);
+  font-size: $size;
+  font-weight: 500;
+  letter-spacing: $tracking;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/// Display type: big, tight, balanced.
+@mixin display($min: 2.8rem, $vw: 7vw, $max: 5.5rem, $lh: 0.98) {
+  font-size: clamp(#{$min}, #{$vw}, #{$max});
+  line-height: $lh;
+  text-wrap: balance;
+}
+
+/// Tabular numerals for ledgers, hours, prices.
+@mixin tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+// ── Structure ────────────────────────────────────────────────────────────
+
+/// Hairline rule on the given sides. `@include hairline(top, bottom);`
+@mixin hairline($sides...) {
+  @each $side in $sides {
+    border-#{$side}: 1px solid var(--ap-line);
+  }
+}
+
+/// Full hairline frame.
+@mixin frame {
+  border: 1px solid var(--ap-line);
+}
+
+// ── Texture ──────────────────────────────────────────────────────────────
+
+/// Dither field: a fine checkerboard of ink that reads as print texture.
+/// Apply to a ::before/::after overlay; pass the ink strength.
+@mixin dither($opacity: 0.05, $cell: 3px) {
+  background-image: repeating-conic-gradient(
+    var(--ap-ink) 0% 25%,
+    transparent 0% 50%
+  );
+  background-size: $cell $cell;
+  opacity: $opacity;
+  pointer-events: none;
+}
+
+/// Soft vertical fade mask, for letting a texture dissolve.
+@mixin fade-mask($direction: to bottom) {
+  -webkit-mask-image: linear-gradient(#{$direction}, black, transparent);
+  mask-image: linear-gradient(#{$direction}, black, transparent);
+}

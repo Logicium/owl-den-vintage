@@ -1,0 +1,619 @@
+// =========================================================================
+// elevate.scss — the shared premium layer.
+//
+// Loaded AFTER each template's themes.css so same-specificity rules here
+// win the cascade. This file carries:
+//   1. A cross-theme typographic elevation pass (bigger, tighter display).
+//   2. The Atlas theme's full identity (no per-template CSS required).
+//   3. Refinement passes for Studio / Heritage / Vibrant / Ironwood.
+// It deliberately avoids structural layout overrides — templates own their
+// hero/section geometry; this layer owns type, rules, texture, and touch.
+// =========================================================================
+@use './core' as *;
+
+/* ── 1. Global elevation ────────────────────────────────────────────── */
+
+[data-theme] .ap-hero__title {
+  @include display(2.8rem, 6.8vw, 5.6rem, 0.98);
+  letter-spacing: var(--ap-tracking-heading);
+}
+[data-theme] .ap-hero__sub,
+[data-theme] .ap-subhero__sub {
+  max-width: 56ch;
+}
+[data-theme] h2 {
+  @include display(2rem, 4.4vw, 3.4rem, 1.04);
+}
+[data-theme] .ap-section-head {
+  gap: 0.85rem;
+}
+[data-theme] .ap-btn:active {
+  transform: translateY(0);
+}
+/* Prices, hours, stats: numerals line up like a ledger everywhere. */
+[data-theme] .ap-hours,
+[data-theme] .ap-menu,
+[data-theme] .ap-footer {
+  @include tabular;
+}
+
+/* ── Footer variant gating safety net ──
+   AppFooter renders all five layouts; the scoped defaults hide three of
+   them but the later layout rules (display:flex) win the same-sheet
+   cascade, so a template without its own [data-footer-style] rules shows
+   every footer at once (marquee did). This net guarantees exactly one
+   layout per style id; the big templates' own themes.css keeps owning
+   the visual treatment on top. */
+[data-footer-style] .ap-footer {
+  background: var(--ap-surface-alt);
+  @include hairline(top);
+}
+[data-footer-style='1'] .ap-footer__billboard,
+[data-footer-style='1'] .ap-footer__minimal,
+[data-footer-style='1'] .ap-footer__stage,
+[data-footer-style='2'] .ap-footer__billboard,
+[data-footer-style='2'] .ap-footer__minimal,
+[data-footer-style='2'] .ap-footer__stage,
+[data-footer-style='3'] .ap-footer__grid,
+[data-footer-style='3'] .ap-footer__minimal,
+[data-footer-style='3'] .ap-footer__stage,
+[data-footer-style='4'] .ap-footer__grid,
+[data-footer-style='4'] .ap-footer__billboard,
+[data-footer-style='4'] .ap-footer__stage,
+[data-footer-style='5'] .ap-footer__grid,
+[data-footer-style='5'] .ap-footer__billboard,
+[data-footer-style='5'] .ap-footer__minimal {
+  display: none;
+}
+[data-footer-style='3'] .ap-footer__billboard { display: block; }
+[data-footer-style='4'] .ap-footer__minimal { display: flex; padding-block: 1.5rem 0; }
+[data-footer-style='5'] .ap-footer__stage { display: flex; }
+
+/* ── 2. THE ATLAS — Swiss editorial index ───────────────────────────── */
+
+@include theme(atlas) {
+  body {
+    font-feature-settings: 'ss01';
+  }
+
+  /* Ledger frames: every section reads as a plate in a survey report. */
+  .ap-section {
+    @include hairline(top);
+  }
+
+  /* Index numbering: sections are entries. 01 / 02 / 03 … */
+  body {
+    counter-reset: ap-index;
+  }
+  .ap-section:has(.ap-section-head) {
+    counter-increment: ap-index;
+  }
+  .ap-section-head .ap-eyebrow::before {
+    content: counter(ap-index, decimal-leading-zero) '\2002/\2002';
+    color: var(--ap-ink);
+  }
+
+  /* The metadata voice: mono, tracked, tabular. */
+  .ap-eyebrow {
+    @include mono-label(0.68rem, 0.22em);
+    color: var(--ap-ink-muted);
+  }
+
+  /* Display: oversized, wide-cut Archivo. */
+  .ap-hero__title {
+    @include display(3.2rem, 8.5vw, 7.25rem, 0.94);
+    font-stretch: 112%;
+    font-weight: 720;
+    letter-spacing: -0.035em;
+  }
+  h2 {
+    font-stretch: 108%;
+    letter-spacing: -0.03em;
+  }
+  .ap-hero__sub {
+    font-size: 1.05rem;
+    color: var(--ap-ink-muted);
+  }
+
+  /* Hero: framed like a title plate, dither field dissolving at the seam. */
+  .ap-hero {
+    position: relative;
+    @include hairline(bottom);
+  }
+  .ap-hero::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: min(42%, 520px);
+    height: 38%;
+    @include dither(0.05, 3px);
+    @include fade-mask(to top left);
+  }
+
+  /* ── Hero style variants (data-hero-style) ──
+     Atlas ships its own full set; without these the hero-style control
+     was a no-op under this theme. */
+
+  /* 2 · Overlay: full-bleed plate, ledger caption pinned bottom-left. */
+  &[data-hero-style='2'] .ap-hero {
+    padding: 0;
+    min-height: 88svh;
+    position: relative;
+    overflow: hidden;
+  }
+  &[data-hero-style='2'] .ap-hero__inner {
+    display: block;
+    max-width: none;
+    padding: 0;
+    max-height: none;
+  }
+  &[data-hero-style='2'] .ap-hero__media {
+    position: absolute;
+    inset: 0;
+  }
+  &[data-hero-style='2'] .ap-hero__media img {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+    object-fit: cover;
+  }
+  &[data-hero-style='2'] .ap-hero__media::after {
+    left: auto;
+    right: 0;
+  }
+  &[data-hero-style='2'] .ap-hero__content {
+    position: absolute;
+    left: clamp(1rem, 4vw, 3rem);
+    right: clamp(1rem, 4vw, 3rem);
+    bottom: clamp(1.25rem, 4vw, 2.75rem);
+    z-index: 2;
+    max-width: 62ch;
+    padding-top: 1rem;
+    border-top: 1px solid color-mix(in srgb, #fff 55%, transparent);
+  }
+  &[data-hero-style='2'] .ap-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(180deg, transparent 30%, color-mix(in srgb, #000 62%, transparent) 100%);
+    pointer-events: none;
+  }
+  &[data-hero-style='2'] .ap-hero__title { color: #fff; }
+  &[data-hero-style='2'] .ap-hero__eyebrow,
+  &[data-hero-style='2'] .ap-hero__subtitle,
+  &[data-hero-style='2'] .ap-hero__sub { color: color-mix(in srgb, #fff 82%, transparent); }
+
+  /* 3 · Broadsheet: type-only index plate, no media. */
+  &[data-hero-style='3'] .ap-hero__media,
+  &[data-hero-style='3'] .ap-hero__deco { display: none !important; }
+  &[data-hero-style='3'] .ap-hero {
+    border-top: 1px solid var(--ap-ink);
+    border-bottom: 1px solid var(--ap-ink);
+  }
+  &[data-hero-style='3'] .ap-hero__inner { display: block; }
+  &[data-hero-style='3'] .ap-hero__title {
+    @include display(3.6rem, 11vw, 9.5rem, 0.9);
+    font-stretch: 114%;
+    border-bottom: 1px solid var(--ap-line);
+    padding-bottom: clamp(1rem, 2.5vw, 2rem);
+    margin-bottom: clamp(1rem, 2.5vw, 1.75rem);
+  }
+
+  /* 4 · Split: half-and-half with a ruled seam, media full height. */
+  &[data-hero-style='4'] .ap-hero { padding: 0; }
+  &[data-hero-style='4'] .ap-hero__inner {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 0;
+    max-width: none;
+    padding: 0;
+    align-items: stretch;
+  }
+  &[data-hero-style='4'] .ap-hero__content {
+    padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 4vw, 3.5rem);
+    justify-content: center;
+  }
+  &[data-hero-style='4'] .ap-hero__media {
+    border: 0;
+    border-left: 1px solid var(--ap-ink);
+  }
+  &[data-hero-style='4'] .ap-hero__media img {
+    height: 100%;
+    min-height: 60svh;
+    aspect-ratio: auto;
+    object-fit: cover;
+  }
+
+  /* 5 · Marquee: headline runs the full measure, media band beneath. */
+  &[data-hero-style='5'] .ap-hero__inner { display: block; }
+  &[data-hero-style='5'] .ap-hero__title {
+    @include display(3.4rem, 10vw, 8.5rem, 0.9);
+    font-stretch: 114%;
+  }
+  &[data-hero-style='5'] .ap-hero__media {
+    margin-top: clamp(1.5rem, 3.5vw, 3rem);
+  }
+  &[data-hero-style='5'] .ap-hero__media img {
+    aspect-ratio: 21 / 8;
+    object-fit: cover;
+  }
+
+  /* 6 · Float: media backdrop, content on a raised plate (parallax-aware). */
+  &[data-hero-style='6'] .ap-hero {
+    position: relative;
+    padding-block: clamp(4rem, 9vw, 8rem);
+    overflow: hidden;
+  }
+  &[data-hero-style='6'] .ap-hero__inner { display: block; position: relative; }
+  &[data-hero-style='6'] .ap-hero__media {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    transform: translateY(var(--ap-hero-parallax-y, 0));
+  }
+  &[data-hero-style='6'] .ap-hero__media img {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+    object-fit: cover;
+    filter: brightness(0.9);
+  }
+  &[data-hero-style='6'] .ap-hero__media::after { display: none; }
+  &[data-hero-style='6'] .ap-hero__content {
+    position: relative;
+    z-index: 2;
+    width: min(100%, 560px);
+    padding: clamp(1.75rem, 4vw, 3rem);
+    background: var(--ap-surface);
+    border: 1px solid var(--ap-ink);
+  }
+
+  /* Header: an index bar. */
+  .ap-header {
+    @include hairline(bottom);
+  }
+  .ap-header__nav a {
+    @include mono-label(0.7rem, 0.14em);
+  }
+
+  /* Buttons: ink blocks with mono labels. Hover inverts, nothing lifts. */
+  .ap-btn {
+    @include mono-label(0.72rem, 0.16em);
+    padding: 1rem 1.65rem;
+    border-radius: 0;
+    border: 1px solid var(--ap-ink);
+    background: var(--ap-ink);
+    color: var(--ap-surface);
+    box-shadow: none;
+    transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+
+    &:hover {
+      transform: none;
+      background: transparent;
+      color: var(--ap-ink);
+      box-shadow: none;
+    }
+  }
+  .ap-btn--ghost {
+    background: transparent;
+    color: var(--ap-ink);
+    border-color: var(--ap-line);
+
+    &:hover {
+      background: var(--ap-ink);
+      color: var(--ap-surface);
+      border-color: var(--ap-ink);
+    }
+  }
+  .ap-btn--accent {
+    background: var(--ap-primary);
+    border-color: var(--ap-primary);
+    color: var(--ap-on-primary);
+
+    &:hover {
+      background: transparent;
+      color: var(--ap-primary);
+    }
+  }
+
+  /* Cards: hairline plates. Structure from rules, not elevation. */
+  .ap-card {
+    border-radius: 0;
+    box-shadow: none;
+    border-color: var(--ap-line);
+    transition: border-color 200ms ease, background-color 560ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      border-color: var(--ap-ink);
+    }
+  }
+
+  /* Images: framed specimens with room to breathe. */
+  .ap-img,
+  .ap-gallery img {
+    border-radius: 0;
+  }
+  .ap-gallery figure,
+  .ap-gallery figcaption {
+    @include tabular;
+  }
+
+  /* Footer: colophon over a dither field. */
+  .ap-footer {
+    position: relative;
+    overflow: hidden;
+    @include hairline(top);
+  }
+  .ap-footer::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: min(38%, 460px);
+    height: 100%;
+    @include dither(0.04, 3px);
+    @include fade-mask(to right);
+  }
+
+  /* Links: precise underlines, no color shift. */
+  main a:not(.ap-btn) {
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+  }
+}
+
+/* ── 3. THE STUDIO — precision pass ─────────────────────────────────── */
+
+@include theme(studio) {
+  .ap-hero__title {
+    @include display(2.8rem, 6.6vw, 5.2rem, 0.97);
+    font-weight: 640;
+  }
+  .ap-card {
+    box-shadow: none;
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--ap-ink) 40%, var(--ap-line));
+    }
+  }
+  .ap-btn {
+    padding: 0.9rem 1.5rem;
+  }
+  .ap-eyebrow {
+    @include tabular;
+  }
+}
+
+/* ── 4. THE HERITAGE — editorial serif pass ─────────────────────────── */
+
+@include theme(heritage) {
+  .ap-hero__title {
+    @include display(3rem, 7.6vw, 6.2rem, 1);
+    font-optical-sizing: auto;
+  }
+  h2 {
+    font-optical-sizing: auto;
+    letter-spacing: -0.02em;
+  }
+  /* Long-form warmth: a drop cap opens the story. */
+  .ap-about p:first-of-type::first-letter {
+    font-family: var(--ap-font-heading);
+    font-size: 3.1em;
+    line-height: 0.82;
+    float: left;
+    padding: 0.08em 0.12em 0 0;
+    color: var(--ap-primary);
+  }
+  .ap-hero__sub,
+  .ap-subhero__sub {
+    font-style: italic;
+    font-size: 1.15rem;
+  }
+}
+
+/* ── 5. THE VIBRANT — art-directed energy pass ──────────────────────── */
+
+@include theme(vibrant) {
+  .ap-hero__title {
+    @include display(3rem, 7.4vw, 5.8rem, 0.96);
+    font-weight: 750;
+  }
+  .ap-card {
+    transition: transform 140ms ease, box-shadow 140ms ease,
+      background-color 560ms cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 560ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: var(--ap-shadow-lg);
+    }
+  }
+}
+
+/* ── 6. THE IRONWOOD — engineered plates ────────────────────────────────
+   Full identity pass. The old dressing (hazard stripes, thick two-tone
+   title underlines, blueprint corner marks) read as clip-art industrial;
+   the current language is the engineered grid: heavy rules used sparingly,
+   flat ink CTA blocks, mono spec tags, figure captions. */
+
+@include theme(ironwood) {
+  /* Kill the legacy costume wherever a template still draws it. */
+  .ap-hero__title,
+  .ap-section-head h2 {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .ap-hero__media::before,
+  .ap-hero__media::after {
+    display: none;
+  }
+  &[data-archetype] .ap-hero__content::after {
+    display: none;
+  }
+  body {
+    background-image: none;
+  }
+
+  /* Type: towering condensed, no decoration. */
+  .ap-hero__title {
+    @include display(3.4rem, 9.5vw, 7.5rem, 0.88);
+    letter-spacing: 0.005em;
+  }
+  h2 {
+    line-height: 0.94;
+  }
+  .ap-eyebrow {
+    @include mono-label(0.7rem, 0.2em);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--ap-ink);
+    border: 0;
+    padding: 0;
+
+    &::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: var(--ap-accent);
+      border: 0;
+      flex-shrink: 0;
+    }
+  }
+
+  /* Hero: a ruled plate. Media sits in its own grid cell behind one heavy
+     seam; a mono figure tag replaces the blueprint corners. */
+  .ap-hero {
+    border-top: 2px solid var(--ap-ink);
+    border-bottom: 2px solid var(--ap-ink);
+  }
+  .ap-hero__media {
+    border: 1px solid var(--ap-ink);
+    position: relative;
+  }
+  .ap-hero__media::after {
+    content: 'FIG. 01';
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    top: auto;
+    right: auto;
+    width: auto;
+    height: auto;
+    @include mono-label(0.62rem, 0.2em);
+    color: var(--ap-surface);
+    background: var(--ap-ink);
+    border: 0;
+    padding: 0.35rem 0.6rem;
+    z-index: 2;
+  }
+  .ap-hero__subtitle,
+  .ap-hero__sub {
+    max-width: 48ch;
+  }
+
+  /* CTAs: flat ink blocks. Color stays in the accents, not the buttons. */
+  .ap-btn {
+    border-radius: 0;
+    border: 2px solid var(--ap-ink);
+    box-shadow: none;
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+
+    &:hover {
+      transform: none;
+      filter: none;
+      box-shadow: none;
+    }
+  }
+  .ap-btn:not(.ap-btn--ghost) {
+    background: var(--ap-ink);
+    border-color: var(--ap-ink);
+    color: var(--ap-surface);
+
+    &:hover {
+      background: var(--ap-primary);
+      border-color: var(--ap-primary);
+      color: var(--ap-on-primary);
+    }
+  }
+  .ap-btn--ghost {
+    background: transparent;
+    color: var(--ap-ink);
+
+    &:hover {
+      background: var(--ap-ink);
+      color: var(--ap-surface);
+    }
+  }
+
+  /* Section heads: spec-sheet openers. One heavy top rule owns the break;
+     the title stands free. */
+  .ap-section-head {
+    border-top: 2px solid var(--ap-ink);
+    padding-top: 1.1rem;
+    gap: 0.7rem;
+  }
+  .ap-section-head h2 {
+    display: block;
+  }
+
+  /* Cards and tiles: flat, ruled, tabular. */
+  .ap-card {
+    border-radius: 0;
+    border: 1px solid var(--ap-ink);
+    box-shadow: none;
+  }
+  .ap-hours,
+  .ap-menu,
+  .ap-contact,
+  .ap-footer {
+    @include tabular;
+  }
+  .ap-hours__ledger li {
+    border-bottom: 1px solid var(--ap-ink);
+  }
+  .ap-hours__dot {
+    border-radius: 0;
+    width: 8px;
+    height: 8px;
+    background: var(--ap-accent);
+  }
+  .ap-gallery__item,
+  .ap-gallery__mosaic-item,
+  .ap-gallery__strip-item,
+  .ap-gallery__marquee-card,
+  .ap-gallery__polaroid-card {
+    border-radius: 0;
+    border: 1px solid var(--ap-ink);
+    box-shadow: none;
+  }
+  .ap-testimonials__ironwood-item,
+  .ap-reviews__spotlight-feature,
+  .ap-reviews__carousel-card,
+  .ap-reviews__wall-item,
+  .ap-reviews__ticker-card {
+    border-radius: 0;
+    border: 1px solid var(--ap-ink);
+    box-shadow: none;
+  }
+  .ap-footer {
+    border-top: 2px solid var(--ap-ink);
+  }
+  .ap-subhero__title {
+    letter-spacing: 0.005em;
+    line-height: 0.92;
+  }
+  .ap-subhero__compact,
+  .ap-subhero__centered {
+    border-bottom: 2px solid var(--ap-ink);
+  }
+  .ap-subhero__centered::after {
+    display: none;
+  }
+}

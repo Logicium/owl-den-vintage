@@ -1,0 +1,189 @@
+/* ════════════════════════════════════════════════════════════════════════
+   scrollbar.css — Fully custom, JS-driven, theme-aware scrollbar.
+
+   The actual rail/thumb DOM and behavior is provided by useApScrollbar().
+   This stylesheet:
+     • Hides native scrollbars completely (page + every element).
+     • Styles the custom .ap-cscroll rail + thumb with theme tokens.
+     • Provides .ap-scroll-x / .ap-scroll-y utilities for horizontal /
+       vertical scroll containers (which the JS auto-decorates).
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Token defaults (per-theme overrides below) ──────────────────────── */
+:root {
+  --ap-scrollbar-size: 12px;
+  --ap-scrollbar-pad: 0px;          /* page bar sits flush to viewport edge */
+  --ap-scrollbar-track: color-mix(in srgb, var(--ap-ink) 6%, transparent);
+  --ap-scrollbar-thumb: color-mix(in srgb, var(--ap-primary) 55%, var(--ap-ink) 25%);
+  --ap-scrollbar-thumb-hover: var(--ap-primary);
+  --ap-scrollbar-thumb-active: color-mix(in srgb, var(--ap-primary) 80%, var(--ap-ink) 20%);
+  --ap-scrollbar-radius: 999px;
+  --ap-scrollbar-thumb-inset: 2px;  /* pill effect: thumb sits inside track */
+}
+
+/* ── Hide all native scrollbars ──────────────────────────────────────── */
+html { padding-right: var(--ap-scrollbar-size, 12px); box-sizing: border-box; }
+html, body { scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar,
+body::-webkit-scrollbar { width: 0; height: 0; display: none; }
+/* Hide on every element; use !important so component-scoped
+   `::-webkit-scrollbar { ... }` overrides cannot reintroduce native bars. */
+*::-webkit-scrollbar,
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-corner {
+  width: 0 !important; height: 0 !important;
+  background: transparent !important;
+  display: none !important;
+}
+* { scrollbar-width: none !important; }
+
+/* ── Custom scrollbar — track (rail) ─────────────────────────────────── */
+.ap-cscroll {
+  position: fixed;
+  z-index: 9999;
+  background: var(--ap-scrollbar-track);
+  border-radius: var(--ap-scrollbar-radius);
+  /* Always visible; only hidden when there's nothing to scroll. */
+  opacity: 1;
+  transition: background-color 220ms ease;
+  user-select: none;
+  touch-action: none;
+}
+.ap-cscroll.is-empty { opacity: 0; pointer-events: none; }
+.ap-cscroll.is-hidden { display: none; }
+@media (hover: none) {
+  .ap-cscroll { opacity: 0.9; }
+}
+
+/* Page-level vertical scrollbar — sits flush to the viewport right edge.
+   This is necessarily fixed-position because it tracks window scroll,
+   but it occupies the viewport gutter with no inset so it reads as a
+   natural in-flow chrome rather than a floating overlay. */
+.ap-cscroll--page.ap-cscroll--y {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--ap-scrollbar-size);
+  border-radius: 0;
+}
+
+/* Inline scrollbars — take real layout space as flex siblings inside
+   the .ap-cscroll-wrap container (no absolute positioning). Length is
+   bound to the scroller's own size via the flex wrap, so the bar can
+   never extend beyond its scrolling content. */
+.ap-cscroll--inline {
+  position: relative;
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+.ap-cscroll--inline.ap-cscroll--x {
+  width: auto;
+  height: var(--ap-scrollbar-size);
+  margin-top: var(--ap-scrollbar-pad);
+  max-width: 100%;
+}
+.ap-cscroll--inline.ap-cscroll--y {
+  height: auto;
+  width: var(--ap-scrollbar-size);
+  margin-left: var(--ap-scrollbar-pad);
+  max-height: 100%;
+}
+
+/* ── Thumb ───────────────────────────────────────────────────────────── */
+.ap-cscroll__thumb {
+  position: absolute;
+  background: var(--ap-scrollbar-thumb);
+  border-radius: var(--ap-scrollbar-radius);
+  cursor: grab;
+  transition: background-color 160ms ease;
+  will-change: transform;
+}
+.ap-cscroll__thumb:hover { background: var(--ap-scrollbar-thumb-hover); }
+.ap-cscroll.is-dragging .ap-cscroll__thumb,
+.ap-cscroll__thumb:active { background: var(--ap-scrollbar-thumb-active); cursor: grabbing; }
+
+.ap-cscroll--y .ap-cscroll__thumb {
+  left: var(--ap-scrollbar-thumb-inset);
+  right: var(--ap-scrollbar-thumb-inset);
+  top: 0; height: 0;
+}
+.ap-cscroll--x .ap-cscroll__thumb {
+  top: var(--ap-scrollbar-thumb-inset);
+  bottom: var(--ap-scrollbar-thumb-inset);
+  left: 0; width: 0;
+}
+
+/* ── Scroll-container utilities ──────────────────────────────────────── */
+/* Wrapper inserted by useApScrollbar around any scrolling element. Holds
+   the scroller + the in-flow scrollbar rail as siblings. */
+.ap-cscroll-wrap {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+.ap-cscroll-wrap--x { flex-direction: column; }
+.ap-cscroll-wrap--y { flex-direction: row; align-items: stretch; }
+.ap-cscroll-wrap > .ap-cscroll-host { flex: 1 1 auto; min-width: 0; min-height: 0; }
+
+.ap-scroll-x,
+.ap-cscroll-host--x {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.ap-scroll-x { overflow-x: auto; overflow-y: hidden; }
+.ap-scroll-y,
+.ap-cscroll-host--y {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+.ap-scroll-y { overflow-y: auto; overflow-x: hidden; }
+
+/* ── Per-theme treatments ────────────────────────────────────────────── */
+
+/* STUDIO — sharp & industrial. Squared rail, ink-on-line monochrome. */
+[data-theme='studio'] {
+  --ap-scrollbar-size: 14px;
+  --ap-scrollbar-track: color-mix(in srgb, var(--ap-ink) 6%, transparent);
+  --ap-scrollbar-thumb: var(--ap-ink);
+  --ap-scrollbar-thumb-hover: color-mix(in srgb, var(--ap-ink) 80%, var(--ap-primary) 20%);
+  --ap-scrollbar-thumb-active: var(--ap-primary);
+  --ap-scrollbar-radius: 0;
+  --ap-scrollbar-thumb-inset: 3px;
+}
+
+/* HERITAGE — softer, gilt-edge pill rail. */
+[data-theme='heritage'] {
+  --ap-scrollbar-size: 12px;
+  --ap-scrollbar-track: color-mix(in srgb, var(--ap-primary) 10%, transparent);
+  --ap-scrollbar-thumb: color-mix(in srgb, var(--ap-primary) 60%, var(--ap-ink) 25%);
+  --ap-scrollbar-thumb-hover: var(--ap-primary);
+  --ap-scrollbar-thumb-active: color-mix(in srgb, var(--ap-primary) 75%, var(--ap-ink) 25%);
+  --ap-scrollbar-radius: 999px;
+  --ap-scrollbar-thumb-inset: 2px;
+}
+
+/* VIBRANT — chunky pill rail. Wider than the rest, fully pill-shaped
+   with a heavy ink border so it reads like a poster element. */
+[data-theme='vibrant'] {
+  --ap-scrollbar-size: 20px;
+  --ap-scrollbar-track: color-mix(in srgb, var(--ap-accent) 70%, var(--ap-surface));
+  --ap-scrollbar-thumb: var(--ap-ink);
+  --ap-scrollbar-thumb-hover: var(--ap-primary);
+  --ap-scrollbar-thumb-active: var(--ap-accent);
+  --ap-scrollbar-radius: 999px;
+  --ap-scrollbar-thumb-inset: 3px;
+}
+[data-theme='vibrant'] .ap-cscroll {
+  border: 2px solid var(--ap-ink);
+}
+[data-theme='vibrant'] .ap-cscroll--page.ap-cscroll--y {
+  /* Inset slightly so the pill shape is visible against the page edge. */
+  top: 8px; right: 8px; bottom: 8px;
+  border-radius: 999px;
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ap-cscroll, .ap-cscroll__thumb { transition: none !important; }
+}

@@ -1,0 +1,786 @@
+/* ─────────────────────────────────────────────────────────────
+   Apotome Admin — shared design system
+   Instrument-panel minimalism: flat grounds, hairline structure,
+   mono micro-labels, restrained accent. Imported once at the top
+   of AdminLayout.vue; every admin view builds from these blocks.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Site theme bridge ───────────────────────────────────────
+     The admin inherits whatever swatch + theme the site is using.
+     Each token below FALLS BACK to a dark editorial default so the
+     admin still looks high-end on the login screen (before a site is
+     selected) and on the very first paint.
+  */
+
+  /* Surfaces — flat; depth comes from hairlines, not glow */
+  --adm-bg:        var(--ap-surface, #0a0b0d);
+  --adm-surface:   var(--ap-surface-alt, #14161a);
+  --adm-surface-2: color-mix(in srgb, var(--ap-surface-alt, #1d2026) 88%, var(--ap-ink, #ffffff) 6%);
+  --adm-surface-3: color-mix(in srgb, var(--ap-surface-alt, #262a32) 78%, var(--ap-ink, #ffffff) 10%);
+  --adm-overlay:   color-mix(in srgb, var(--ap-surface, #0a0b0d) 82%, transparent);
+
+  /* Borders & dividers */
+  --adm-border:        var(--ap-line, #262a32);
+  --adm-border-strong: color-mix(in srgb, var(--ap-line, #3a3f48) 60%, var(--ap-ink, #ffffff) 12%);
+  --adm-border-soft:   color-mix(in srgb, var(--ap-line, #1c1f25) 75%, transparent);
+
+  /* Text */
+  --adm-text:        var(--ap-ink, #f4f5f7);
+  --adm-text-muted:  var(--ap-ink-muted, #a5acba);
+  --adm-text-subtle: color-mix(in srgb, var(--ap-ink-muted, #6b717e) 65%, transparent);
+  --adm-on-accent:   var(--ap-on-primary, #0f1014);
+
+  /* Brand accent — follows the site primary, falls back to brass. */
+  --adm-accent:        var(--ap-primary, #c4a47c);
+  --adm-accent-soft:   color-mix(in srgb, var(--ap-primary, #d4b890) 78%, #ffffff 22%);
+  --adm-accent-deep:   color-mix(in srgb, var(--ap-primary, #9a7d57) 78%, #000000 22%);
+  --adm-accent-glow:   color-mix(in srgb, var(--ap-primary, #c4a47c) 18%, transparent);
+
+  /* Status (independent so states stay recognizable on any swatch) */
+  --adm-success: #6fcf97;
+  --adm-warn:    #f0b56b;
+  --adm-danger:  #f07a7a;
+  --adm-info:    #7aa2f7;
+
+  /* Chart palette — validated (dataviz skill) categorical hues, CVD-safe.
+     Dark steps are the default (admin defaults dark); the light overrides
+     below swap in when a site swatch sets [data-mode="light"]. Charts
+     reference these by role so identity never depends on the site accent. */
+  --adm-chart-1: #3987e5;  /* blue  — visitors / primary sequential */
+  --adm-chart-2: #199e70;  /* aqua  — pageviews */
+  --adm-chart-3: #c98500;  /* yellow — 3rd category */
+  --adm-chart-good: #0ca30c;
+  --adm-chart-bad:  #d03b3b;
+  --adm-chart-grid: color-mix(in srgb, var(--adm-text) 12%, transparent);
+  --adm-chart-axis: color-mix(in srgb, var(--adm-text) 22%, transparent);
+
+  /* ── Shape — ONE consistent radius language for the whole panel ──
+     sm  → controls  (inputs, buttons, chips, file buttons)
+     mid → mid depth (popovers, image frames, segmented controls)
+     lg  → surfaces  (cards, fieldsets, item editors, plates)
+     Pills stay 999px. These live on the base :root (not under
+     [data-mode='light']) so BOTH modes get the same corners — previously
+     they were light-only, leaving every dark-mode element to fall back to
+     whatever inline literal it happened to carry. That mismatch was the
+     source of the inconsistent corners across the panel. */
+  --adm-radius-sm: 10px;
+  --adm-radius:    12px;
+  --adm-radius-lg: 16px;
+  --adm-shadow-sm: none;
+  --adm-shadow:    none;
+  --adm-shadow-lg: 0 24px 64px -32px rgba(0,0,0,0.55);
+
+  /* Type — headings borrow the site's face so the dashboard reads as
+     part of the same brand; structure labels are always mono. */
+  --adm-font-serif: var(--ap-font-heading, "Cormorant Garamond", "Georgia", "Times New Roman", serif);
+  --adm-font-sans:  var(--ap-font-body, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, sans-serif);
+  --adm-font-mono:  var(--ap-font-mono, ui-monospace, "JetBrains Mono", Menlo, monospace);
+  --adm-heading-tracking: var(--ap-tracking-heading, -0.01em);
+  --adm-heading-transform: var(--ap-heading-transform, none);
+  --adm-heading-weight: var(--ap-heading-weight, 500);
+}
+
+:root[data-mode='light'] {
+  --adm-chart-1: #2a78d6;
+  --adm-chart-2: #1baf7a;
+  --adm-chart-3: #eda100;
+  --adm-chart-good: #006300;
+  --adm-chart-bad:  #d03b3b;
+}
+
+/* ── Layout primitives ─────────────────────────────────────── */
+
+.adm-page {
+  display: flex; flex-direction: column; gap: 1.75rem;
+}
+.adm-page__head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 1.5rem; flex-wrap: wrap;
+  padding: 2.25rem 0 1.25rem;
+  border-bottom: 1px solid var(--adm-border);
+}
+.adm-page__title-block { display: flex; flex-direction: column; gap: 0.5rem; max-width: 70ch; }
+.adm-eyebrow {
+  font-family: var(--adm-font-mono);
+  font-size: 0.68rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.22em;
+  color: var(--adm-accent);
+}
+.adm-eyebrow::before { content: '/ '; color: var(--adm-text-subtle); }
+/* Premium add-on chip — gold pill so premium features are unmistakable. */
+.adm-eyebrow--premium {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--adm-accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--adm-accent) 45%, transparent);
+  letter-spacing: 0.16em;
+}
+.adm-eyebrow--premium::before { content: none; }
+.adm-title {
+  font-family: var(--adm-font-serif);
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: var(--adm-heading-weight);
+  letter-spacing: var(--adm-heading-tracking);
+  text-transform: var(--adm-heading-transform);
+  color: var(--adm-text); margin: 0; line-height: 1.05;
+}
+.adm-subtitle {
+  color: var(--adm-text-muted); font-size: 0.95rem;
+  font-family: var(--adm-font-sans);
+  max-width: 62ch; margin: 0.15rem 0 0; line-height: 1.55;
+}
+.adm-page__actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+/* ── Cards — flat plates with hairline edges ───────────────── */
+
+.adm-card {
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-radius-lg);
+  padding: 1.25rem 1.4rem;
+  transition: border-color 160ms ease;
+}
+.adm-card:hover { border-color: var(--adm-border-strong); }
+.adm-card--inset { background: var(--adm-surface-2); }
+.adm-card__title {
+  font-family: var(--adm-font-serif); font-size: 1.3rem; font-weight: var(--adm-heading-weight);
+  margin: 0 0 0.3rem;
+  letter-spacing: var(--adm-heading-tracking);
+  text-transform: var(--adm-heading-transform);
+  line-height: 1.15;
+}
+.adm-card__sub { color: var(--adm-text-muted); font-size: 0.88rem; margin: 0 0 1rem; }
+
+/* ── Page lock while the dashboard overlay is open ─────────────
+   The shell is `position: fixed` above the live site; without this the
+   site behind still scrolls under it. Applied to <html> by AdminLayout. */
+html.ap-admin-open, html.ap-admin-open body {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+/* ── Native scrollbars inside the admin ─────────────────────────
+   scrollbar.css hides native bars globally (!important on *) in favor of
+   the JS overlay bar — but that system is excluded from the admin shell
+   (it reparents Vue-managed panels). Re-enable a quiet thin native bar
+   here; these rules out-specify the global hide and load after it. */
+.admin-shell,
+.admin-shell * {
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--adm-border-strong) transparent;
+}
+.admin-shell ::-webkit-scrollbar,
+.admin-shell::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+  height: 10px !important;
+  background: transparent !important;
+}
+.admin-shell ::-webkit-scrollbar-thumb,
+.admin-shell::-webkit-scrollbar-thumb {
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  background: var(--adm-border-strong) !important;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.admin-shell ::-webkit-scrollbar-track {
+  display: block !important;
+  background: transparent !important;
+}
+
+/* ── Tabs — page-level section switcher ─────────────────────── */
+
+.adm-tabs {
+  display: inline-flex;
+  width: fit-content;
+  gap: 2px;
+  padding: 3px;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--adm-border-strong);
+  border-radius: var(--adm-radius);
+  background: var(--adm-surface);
+}
+.adm-tab {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  padding: 0.45rem 0.95rem;
+  border: 0;
+  border-radius: calc(var(--adm-radius) - 3px);
+  background: transparent;
+  color: var(--adm-text-muted);
+  font: inherit; font-size: 0.84rem; font-weight: 500;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.adm-tab svg { display: block; }
+.adm-tab:hover { color: var(--adm-text); }
+.adm-tab.is-active {
+  background: var(--adm-surface-3);
+  color: var(--adm-text);
+  box-shadow: inset 0 0 0 1px var(--adm-border-strong);
+}
+.adm-tab.is-active svg { color: var(--adm-accent); }
+
+/* ── Buttons — machined, quiet until needed ────────────────── */
+
+.adm-btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  background: transparent;
+  color: var(--adm-text);
+  border: 1px solid var(--adm-border-strong);
+  border-radius: var(--adm-radius);
+  font: inherit; font-size: 0.85rem; font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer; line-height: 1;
+  transition: background 140ms, border-color 140ms, color 140ms;
+}
+.adm-btn:hover { background: var(--adm-surface-2); border-color: var(--adm-accent-deep); }
+.adm-btn:active { background: var(--adm-surface-3); }
+.adm-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.adm-btn--primary {
+  background: var(--adm-accent); color: var(--adm-on-accent);
+  border-color: var(--adm-accent);
+  font-weight: 600;
+}
+.adm-btn--primary:hover {
+  background: var(--adm-accent-soft); border-color: var(--adm-accent-soft);
+}
+
+.adm-btn--ghost { background: transparent; border-color: transparent; color: var(--adm-text-muted); }
+.adm-btn--ghost:hover { background: var(--adm-surface-2); color: var(--adm-text); border-color: var(--adm-border); }
+
+.adm-btn--danger { color: var(--adm-danger); border-color: rgba(240,122,122,0.35); background: transparent; }
+.adm-btn--danger:hover { background: rgba(240,122,122,0.08); border-color: var(--adm-danger); }
+
+.adm-btn--sm { padding: 0.32rem 0.65rem; font-size: 0.78rem; }
+
+/* ── Inputs ────────────────────────────────────────────────── */
+
+.adm-input, .adm-select, .adm-textarea {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  background: var(--adm-surface-2);
+  color: var(--adm-text);
+  border: 1px solid var(--adm-border-strong);
+  border-radius: var(--adm-radius);
+  font: inherit; font-size: 0.9rem;
+  transition: border-color 140ms, box-shadow 140ms;
+}
+.adm-input::placeholder, .adm-textarea::placeholder { color: var(--adm-text-subtle); }
+.adm-input:focus, .adm-select:focus, .adm-textarea:focus {
+  outline: none;
+  border-color: var(--adm-accent);
+  box-shadow: 0 0 0 3px var(--adm-accent-glow);
+}
+.adm-textarea { resize: vertical; min-height: 5.5rem; }
+
+.adm-label {
+  display: flex; flex-direction: column; gap: 0.35rem;
+  font-family: var(--adm-font-mono);
+  font-size: 0.68rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--adm-text-muted);
+}
+
+/* ── Badges / pills — mono, dot-marked ─────────────────────── */
+
+.adm-badge {
+  display: inline-flex; align-items: center; gap: 0.38rem;
+  padding: 0.18rem 0.55rem;
+  font-family: var(--adm-font-mono);
+  font-size: 0.66rem; font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  border-radius: var(--adm-radius-sm);
+  border: 1px solid var(--adm-border-strong);
+  background: transparent; color: var(--adm-text-muted);
+}
+.adm-badge::before {
+  content: '';
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+}
+.adm-badge--live    { color: var(--adm-success); border-color: rgba(111,207,151,0.35); }
+.adm-badge--live::before { box-shadow: 0 0 6px currentColor; }
+.adm-badge--pending { color: var(--adm-warn);    border-color: rgba(240,181,107,0.35); }
+.adm-badge--failed  { color: var(--adm-danger);  border-color: rgba(240,122,122,0.35); }
+.adm-badge--info    { color: var(--adm-info);    border-color: rgba(122,162,247,0.35); }
+
+/* ── Tables — ledger rules, mono headers ───────────────────── */
+
+.adm-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.adm-table th, .adm-table td {
+  padding: 0.7rem 0.85rem; text-align: left; vertical-align: middle;
+  border-bottom: 1px solid var(--adm-border-soft);
+  color: var(--adm-text);
+}
+.adm-table thead th {
+  font-family: var(--adm-font-mono);
+  font-size: 0.64rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--adm-text-subtle);
+  border-bottom: 1px solid var(--adm-border);
+}
+.adm-table tbody tr { transition: background 120ms ease; }
+.adm-table tbody tr:hover td { background: color-mix(in srgb, var(--adm-text) 2.5%, transparent); }
+
+/* ── Empty state ──────────────────────────────────────────── */
+
+.adm-empty {
+  text-align: center;
+  padding: 4rem 1.5rem;
+  border: 1px dashed var(--adm-border-strong);
+  border-radius: var(--adm-radius-lg);
+  background: transparent;
+}
+.adm-empty__icon {
+  width: 52px; height: 52px; margin: 0 auto 1rem;
+  border-radius: var(--adm-radius);
+  display: grid; place-items: center;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  color: var(--adm-accent);
+  font-size: 1.2rem;
+}
+.adm-empty__title {
+  font-family: var(--adm-font-serif); font-size: 1.4rem; font-weight: var(--adm-heading-weight);
+  margin: 0 0 0.4rem;
+}
+.adm-empty__body { color: var(--adm-text-muted); max-width: 44ch; margin: 0 auto 1.25rem; }
+
+/* ── Status helpers ───────────────────────────────────────── */
+
+.adm-msg-ok    { color: var(--adm-success); font-size: 0.85rem; }
+.adm-msg-warn  { color: var(--adm-warn);    font-size: 0.85rem; }
+.adm-msg-err   { color: var(--adm-danger);  font-size: 0.85rem; }
+.adm-muted     { color: var(--adm-text-muted); }
+.adm-subtle    { color: var(--adm-text-subtle); }
+
+/* ── Links ────────────────────────────────────────────────── */
+
+.adm-link {
+  color: var(--adm-accent-soft); text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--adm-accent-soft) 35%, transparent);
+  transition: border-color 140ms;
+}
+.adm-link:hover { border-bottom-color: var(--adm-accent-soft); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ai-* — the bespoke admin input kit (shared/src/admin/components/inputs).
+   Every custom control builds on these primitives so the whole panel has
+   one consistent, premium input language.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.ai-field { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
+.ai-label {
+  font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--adm-text-muted);
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.ai-hint { font-size: 0.74rem; color: var(--adm-text-subtle); margin: 0; }
+
+.ai-control {
+  display: flex; align-items: center; gap: 0.5rem;
+  width: 100%;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-radius-sm);
+  padding: 0 0.75rem;
+  min-height: 2.5rem;
+  color: var(--adm-text);
+  font: inherit; font-size: 0.88rem;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+}
+.ai-control:hover { border-color: var(--adm-border-strong); }
+.ai-control:focus-within, .ai-control.is-open {
+  border-color: var(--adm-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--adm-accent) 18%, transparent);
+}
+.ai-control input, .ai-control textarea {
+  flex: 1; min-width: 0;
+  background: none; border: none; outline: none;
+  color: inherit; font: inherit;
+  padding: 0.55rem 0;
+}
+.ai-control input::placeholder { color: var(--adm-text-subtle); }
+.ai-control .ai-affix { color: var(--adm-text-subtle); flex-shrink: 0; display: inline-flex; align-items: center; font-size: 0.82rem; }
+
+/* Popover (selects, pickers) */
+.ai-pop {
+  position: absolute; top: calc(100% + 0.35rem); left: 0; right: 0; z-index: 40;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border-strong);
+  border-radius: var(--adm-radius);
+  box-shadow: var(--adm-shadow-lg);
+  overflow: hidden;
+  animation: ai-pop 130ms ease both;
+}
+@keyframes ai-pop { from { opacity: 0; transform: translateY(-4px) scale(0.99); } }
+.ai-pop__search {
+  display: flex; align-items: center; gap: 0.45rem;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--adm-border);
+  color: var(--adm-text-subtle);
+}
+.ai-pop__search input {
+  flex: 1; background: none; border: none; outline: none;
+  color: var(--adm-text); font: inherit; font-size: 0.86rem;
+}
+.ai-pop__list { max-height: 260px; overflow-y: auto; padding: 0.3rem; }
+.ai-option {
+  display: flex; align-items: center; gap: 0.55rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  background: none; border: none; cursor: pointer;
+  color: var(--adm-text); font: inherit; font-size: 0.86rem;
+  border-radius: var(--adm-radius-sm); text-align: left;
+  transition: background 110ms ease;
+}
+.ai-option:hover, .ai-option.is-hi { background: var(--adm-surface-2); }
+.ai-option.is-selected { color: var(--adm-accent); }
+.ai-option__hint { margin-left: auto; font-size: 0.72rem; color: var(--adm-text-subtle); flex-shrink: 0; }
+.ai-pop__empty { padding: 0.8rem; font-size: 0.8rem; color: var(--adm-text-subtle); text-align: center; }
+
+/* Select trigger */
+.ai-select-trigger { cursor: pointer; user-select: none; justify-content: space-between; }
+.ai-select-trigger .ai-select-value { flex: 1; min-width: 0; padding: 0.55rem 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+.ai-select-trigger .ai-select-value.is-placeholder { color: var(--adm-text-subtle); }
+.ai-caret { color: var(--adm-text-subtle); flex-shrink: 0; transition: transform 160ms ease; }
+.is-open > .ai-caret { transform: rotate(180deg); }
+
+/* Toggle switch */
+.ai-toggle { display: inline-flex; align-items: center; gap: 0.6rem; cursor: pointer; user-select: none; }
+.ai-toggle__track {
+  width: 38px; height: 22px; border-radius: 999px;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-border-strong);
+  position: relative; flex-shrink: 0;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.ai-toggle__thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--adm-text-muted);
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.3, 1.2), background 160ms ease;
+}
+.ai-toggle.is-on .ai-toggle__track {
+  background: color-mix(in srgb, var(--adm-accent) 35%, var(--adm-surface-2));
+  border-color: var(--adm-accent);
+}
+.ai-toggle.is-on .ai-toggle__thumb { transform: translateX(16px); background: var(--adm-accent); }
+.ai-toggle__text { font-size: 0.84rem; color: var(--adm-text); }
+
+/* Number stepper */
+.ai-step { padding: 0; overflow: hidden; }
+.ai-step input { text-align: center; padding: 0.55rem 0.25rem; font-variant-numeric: tabular-nums; }
+.ai-step__btn {
+  display: grid; place-items: center;
+  width: 2.3rem; align-self: stretch;
+  background: none; border: none; cursor: pointer;
+  color: var(--adm-text-muted);
+  transition: background 120ms ease, color 120ms ease;
+}
+.ai-step__btn:hover:not(:disabled) { background: var(--adm-surface-2); color: var(--adm-text); }
+.ai-step__btn:disabled { opacity: 0.35; cursor: default; }
+.ai-step__btn:first-child { border-right: 1px solid var(--adm-border); }
+.ai-step__btn:last-child { border-left: 1px solid var(--adm-border); }
+.ai-step__unit { color: var(--adm-text-subtle); font-size: 0.76rem; padding-right: 0.6rem; white-space: nowrap; }
+
+/* Chips (tag list) */
+.ai-chips { flex-wrap: wrap; gap: 0.35rem; padding: 0.35rem 0.5rem; min-height: 2.5rem; }
+.ai-chips input { padding: 0.3rem 0.25rem; flex: 1; min-width: 120px; }
+.ai-chip {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.22rem 0.35rem 0.22rem 0.6rem;
+  background: color-mix(in srgb, var(--adm-accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--adm-accent) 35%, transparent);
+  border-radius: 999px;
+  font-size: 0.76rem; color: var(--adm-text);
+  white-space: nowrap;
+}
+.ai-chip button {
+  display: grid; place-items: center;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: none; border: none; cursor: pointer;
+  color: var(--adm-text-muted); font-size: 0.7rem; line-height: 1;
+}
+.ai-chip button:hover { background: color-mix(in srgb, var(--adm-accent) 30%, transparent); color: var(--adm-text); }
+
+/* Image input */
+.ai-img {
+  position: relative;
+  border: 1.5px dashed var(--adm-border-strong);
+  border-radius: var(--adm-radius);
+  background: var(--adm-surface-2);
+  overflow: hidden;
+  transition: border-color 140ms ease, background 140ms ease;
+  cursor: pointer;
+}
+.ai-img:hover, .ai-img.is-drag { border-color: var(--adm-accent); background: color-mix(in srgb, var(--adm-accent) 6%, var(--adm-surface-2)); }
+.ai-img--empty { display: grid; place-items: center; min-height: 108px; }
+.ai-img__cta {
+  display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+  color: var(--adm-text-subtle); font-size: 0.76rem;
+  padding: 0.9rem; text-align: center;
+}
+.ai-img__cta svg { color: var(--adm-text-muted); }
+/* The empty state adapts to the slot it sits in. In a thumbnail-sized cell
+   the full sentence wraps word-by-word into a tall sliver (the menu editor's
+   squashed drop zones), so narrow slots fall back to a two-word label, and
+   the tightest ones to the icon alone in a square. The full wording moves to
+   the tooltip either way. */
+.ai-img { container-type: inline-size; }
+.ai-img__cta-short { display: none; }
+@container (max-width: 220px) {
+  .ai-img__cta-long { display: none; }
+  .ai-img__cta-short { display: block; }
+  .ai-img--empty { min-height: 0; aspect-ratio: 1 / 1; }
+  .ai-img__cta { padding: 0.4rem; gap: 0.2rem; }
+}
+@container (max-width: 110px) {
+  .ai-img__cta-short { display: none; }
+}
+.ai-img__preview { position: relative; aspect-ratio: 16 / 9; }
+.ai-img__preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Image action chips are ALWAYS visible (not hover-gated) and wrap instead
+   of clipping — hover doesn't exist on touch, and in tight gallery cells the
+   chips used to overflow the frame and get cut off. */
+.ai-img__actions {
+  position: absolute; inset: auto 0 0 0;
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.3rem;
+  padding: 1.6rem 0.45rem 0.45rem;
+  background: linear-gradient(to top, rgba(10,11,14,0.78), transparent);
+  opacity: 1;
+}
+.ai-img__chip {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.28rem 0.6rem; border-radius: 999px;
+  background: rgba(12,13,16,0.78); color: #fff;
+  border: 1px solid rgba(255,255,255,0.22);
+  font-size: 0.7rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+  backdrop-filter: blur(6px);
+  transition: background 140ms ease;
+}
+.ai-img__chip:hover { background: rgba(28,30,36,0.85); }
+.ai-img__busy {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: rgba(10,11,14,0.55); color: #fff; font-size: 0.78rem;
+  backdrop-filter: blur(2px);
+}
+
+/* Segmented control */
+.ai-seg {
+  display: inline-flex; gap: 0.2rem;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-radius-sm);
+  padding: 0.2rem;
+}
+.ai-seg button {
+  border: none; background: none; cursor: pointer;
+  padding: 0.4rem 0.85rem;
+  font: inherit; font-size: 0.8rem; font-weight: 550;
+  color: var(--adm-text-muted);
+  border-radius: 7px;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+.ai-seg button.is-active {
+  background: var(--adm-surface);
+  color: var(--adm-text);
+  box-shadow: var(--adm-shadow);
+  border: 1px solid var(--adm-border-strong);
+  margin: -1px;
+}
+
+/* Icon (emoji) picker grid */
+.ai-emoji-grid {
+  display: grid; grid-template-columns: repeat(8, 1fr);
+  gap: 0.15rem; padding: 0.5rem;
+}
+.ai-emoji-grid button {
+  display: grid; place-items: center;
+  font-size: 1.05rem; padding: 0.3rem;
+  background: none; border: none; cursor: pointer; border-radius: 8px;
+}
+.ai-emoji-grid button:hover { background: var(--adm-surface-2); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2026 layout layer — re-composes every admin panel's form layout.
+   Deliberately scoped as `.admin-shell .admin-main …` so it outranks the
+   views' scoped column/width rules: forms become breathing, responsive
+   compositions instead of cramped single-line rows.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Page rhythm: generous, centered, readable ── */
+.admin-shell .admin-main .adm-page { gap: 2.4rem; max-width: 1180px; margin-inline: auto; }
+.admin-shell .admin-main .adm-page__head { padding: 2.9rem 0 1.6rem; }
+.admin-shell .admin-main .adm-card { padding: 2rem 2.2rem; border-radius: var(--adm-radius-lg); }
+
+/* ── Sections (ContentView fieldsets) as editorial plates ── */
+.admin-shell .admin-main fieldset {
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-radius-lg);
+  background: var(--adm-surface);
+  padding: 2rem 2.2rem 2.2rem;
+  margin: 0 0 1.9rem;
+  display: flex; flex-direction: column; gap: 1.25rem;
+  animation: adm-rise 340ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+@keyframes adm-rise { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) { .admin-shell .admin-main fieldset { animation: none; } }
+.admin-shell .admin-main fieldset legend {
+  font-family: var(--adm-font-serif);
+  font-size: 1.25rem; font-weight: 500;
+  letter-spacing: var(--adm-heading-tracking);
+  color: var(--adm-text);
+  padding: 0.35rem 1.1rem;
+  background: var(--adm-bg);
+  border: 1px solid var(--adm-border);
+  border-radius: 999px;
+}
+.admin-shell .admin-main fieldset > label {
+  display: flex; flex-direction: column; gap: 0.4rem;
+  font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--adm-text-muted);
+}
+.admin-shell .admin-main fieldset > label .adm-input,
+.admin-shell .admin-main fieldset > label textarea {
+  font-size: 0.9rem; text-transform: none; letter-spacing: normal; font-weight: 400;
+}
+.admin-shell .admin-main .section-sub {
+  margin: 0.6rem 0 0;
+  font-family: var(--adm-font-serif);
+  font-size: 1.05rem; color: var(--adm-text);
+  border-bottom: 1px solid var(--adm-border);
+  padding-bottom: 0.5rem;
+}
+.admin-shell .admin-main .section-sub .hint {
+  font-family: var(--adm-font-sans); font-size: 0.74rem; color: var(--adm-text-subtle); margin-left: 0.5rem;
+}
+
+/* ── Field grids: fluid, airy, container-driven ── */
+.admin-shell .admin-main .row-2,
+.admin-shell .admin-main .row-3,
+.admin-shell .admin-main .meta-grid,
+.admin-shell .admin-main .hours-meta,
+.admin-shell .admin-main .grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.25rem 1.5rem;
+  align-items: start;
+}
+.admin-shell .admin-main .grid__full,
+.admin-shell .admin-main .adm-field--full { grid-column: 1 / -1; }
+.admin-shell .admin-main .hours-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.8rem 1.5rem;
+}
+
+/* ── Item editors (products, rooms, tiers, services, menu items):
+      cramped one-line rows become breathing editor cards ── */
+.admin-shell .admin-main .rm-list,
+.admin-shell .admin-main .svc-list {
+  list-style: none; margin: 0 0 1.4rem; padding: 0;
+  display: flex; flex-direction: column; gap: 1.2rem;
+}
+.admin-shell .admin-main .rm-row,
+.admin-shell .admin-main .svc-row {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 1.1rem 1.25rem;
+  align-items: end;
+  padding: 1.5rem 1.6rem;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-radius-lg);
+  margin: 0;
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+.admin-shell .admin-main .rm-row:hover,
+.admin-shell .admin-main .svc-row:hover { border-color: var(--adm-border-strong); }
+.admin-shell .admin-main .rm-row--new,
+.admin-shell .admin-main .svc-row--new {
+  border-style: dashed;
+  border-color: var(--adm-border-strong);
+  background: color-mix(in srgb, var(--adm-accent) 4%, var(--adm-surface-2));
+}
+/* Neutralize the old fixed column widths so cells flex with the grid. */
+.admin-shell .admin-main .rm-row > *,
+.admin-shell .admin-main .svc-row > * { width: auto !important; max-width: none !important; min-width: 0; }
+.admin-shell .admin-main .rm-row > .adm-btn,
+.admin-shell .admin-main .svc-row > .adm-btn { justify-self: start; align-self: end; }
+.admin-shell .admin-main .rm-row__sold { align-self: center; font-variant-numeric: tabular-nums; }
+
+/* Repeating content blocks (testimonials, menu categories, wizard-style card blocks) */
+.admin-shell .admin-main .testimonial-row,
+.admin-shell .admin-main .menu-cat {
+  display: flex; flex-direction: column; gap: 1rem;
+  padding: 1.5rem 1.6rem;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-radius-lg);
+  margin: 0 0 1.2rem;
+  transition: border-color 180ms ease;
+}
+.admin-shell .admin-main .testimonial-row:hover,
+.admin-shell .admin-main .menu-cat:hover { border-color: var(--adm-border-strong); }
+
+/* ── Photos: gallery becomes a real masonry-feel grid ── */
+.admin-shell .admin-main .photo-row {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+.admin-shell .admin-main .gallery-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1.1rem;
+}
+.admin-shell .admin-main .photo-slot {
+  display: flex; flex-direction: column; gap: 0.55rem;
+  padding: 1rem;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-radius-lg);
+}
+
+/* ── Sticky glass save bar — the premium "always reachable" action ── */
+.admin-shell .admin-main .save-bar {
+  position: sticky; bottom: 1rem; z-index: 20;
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 0.8rem 1.1rem;
+  background: color-mix(in srgb, var(--adm-surface) 78%, transparent);
+  border: 1px solid var(--adm-border-strong);
+  border-radius: 999px;
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  box-shadow: var(--adm-shadow-lg);
+  width: fit-content;
+}
+/* Save-bar action buttons are pill-shaped to echo their pill container. */
+.admin-shell .admin-main .save-bar button,
+.admin-shell .admin-main .save-bar .adm-btn {
+  border-radius: 999px;
+  padding-inline: 1.35rem;
+}
+
+/* ── Small screens: keep the air, drop the padding ── */
+@media (max-width: 720px) {
+  .admin-shell .admin-main .adm-card,
+  .admin-shell .admin-main fieldset { padding: 1.3rem 1.1rem 1.5rem; border-radius: var(--adm-radius-lg); }
+  .admin-shell .admin-main .rm-row,
+  .admin-shell .admin-main .svc-row,
+  .admin-shell .admin-main .testimonial-row,
+  .admin-shell .admin-main .menu-cat { padding: 1.1rem; grid-template-columns: 1fr; }
+  .admin-shell .admin-main .adm-page__head { padding: 1.8rem 0 1.1rem; }
+  .admin-shell .admin-main .save-bar { width: 100%; justify-content: center; border-radius: 16px; }
+}

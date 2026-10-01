@@ -1,0 +1,36 @@
+{
+  "_note": "This file is overwritten by the Apotome provisioning service during site generation. Edit your live content from /admin.",
+  "archetype": "vault",
+  "brand": "The Vault Shop",
+  "tagline": "Curated Goods, Crafted with Care",
+  "blurb": "Locally sourced products and artisan finds.",
+  "theme": "earth",
+  "swatch": "default",
+  "variant": "classic",
+  "contact": {
+    "address": "789 Market St, Trinidad, CO 81082",
+    "phone": "(719) 555-0300",
+    "email": "shop@example.com",
+    "mapEmbedUrl": ""
+  },
+  "hours": [
+    { "day": "Mon–Sat", "open": "10am – 6pm" },
+    { "day": "Sunday", "open": "12pm – 5pm" }
+  ],
+  "photos": {
+    "hero": { "src": "/images/hero.jpg", "alt": "Storefront" },
+    "about": { "src": "/images/about.jpg", "alt": "Products on display" },
+    "storefront": { "src": "/images/storefront.jpg", "alt": "Shop exterior" },
+    "gallery": []
+  },
+  "story": {
+    "title": "Our Story",
+    "paragraphs": ["A shop devoted to quality and community."],
+    "facts": []
+  },
+  "featured": [],
+  "categories": [],
+  "testimonials": [],
+  "shopUrl": "",
+  "social": []
+}

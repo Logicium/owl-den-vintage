@@ -1,0 +1,47 @@
+{
+  "template": "vault",
+  "license": "Unsplash License",
+  "generatedAt": "2026-07-01T03:08:50.354Z",
+  "photos": [
+    {
+      "file": "cat-apparel.jpg",
+      "photographer": "Ian ODonnell",
+      "photographerUrl": "https://unsplash.com/@ianodonnell?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/denim-jackets-hanging-on-a-rack-in-a-store-m0bnY2nFo0A?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "m0bnY2nFo0A",
+      "alt": "Apparel"
+    },
+    {
+      "file": "cat-home.jpg",
+      "photographer": "micheile henderson",
+      "photographerUrl": "https://unsplash.com/@micheile?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/a-shelf-filled-with-vases-and-other-items-1-VoF8mT7Aw?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "1-VoF8mT7Aw",
+      "alt": "Home"
+    },
+    {
+      "file": "cat-pantry.jpg",
+      "photographer": "Annie Spratt",
+      "photographerUrl": "https://unsplash.com/@anniespratt?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/preserve-jars-on-brown-wooden-shelf-0u9JLHYSgxo?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "0u9JLHYSgxo",
+      "alt": "Pantry"
+    },
+    {
+      "file": "cat-gifts.jpg",
+      "photographer": "Atahan Güç",
+      "photographerUrl": "https://unsplash.com/@atahanguc?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/a-store-with-a-lot-of-bags-on-display-XUPPqCivV58?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "XUPPqCivV58",
+      "alt": "Gifts"
+    },
+    {
+      "file": "product-04.jpg",
+      "photographer": "Stacy",
+      "photographerUrl": "https://unsplash.com/@stacysuxx?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/autumn-flat-lay-with-notebook-laptop-and-leaves-mErXDEiSbCU?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "mErXDEiSbCU",
+      "alt": "Field notebook, letterpress cover"
+    }
+  ]
+}
