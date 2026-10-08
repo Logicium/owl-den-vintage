@@ -1782,3 +1782,40 @@
     transform: translate3d(0, calc(var(--ap-hero-parallax-y, 0px) * -0.25), 0) !important;
   }
 }
+
+/* ── Vibrant · poster ribbon, object-field tiles, sticker products ──── */
+.ap-ribbon {
+  border-top: 3px solid var(--ap-ink);
+  border-bottom: 3px solid var(--ap-ink);
+  background: var(--ap-accent);
+  color: var(--ap-ink);
+  padding: 0.55rem 0;
+  font-family: var(--ap-font-heading);
+  font-weight: 800;
+  font-size: clamp(1rem, 1.6vw, 1.35rem);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+[data-theme='vibrant'] .ap-categories .ap-categories__editorial { gap: clamp(0.75rem, 1.5vw, 1.25rem); }
+[data-theme='vibrant'] .ap-categories .ap-categories__tile {
+  border: 3px solid var(--ap-ink);
+  border-radius: 12px;
+  box-shadow: 5px 5px 0 var(--ap-ink);
+  overflow: hidden;
+  background: var(--ap-surface);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+[data-theme='vibrant'] .ap-categories .ap-categories__tile:hover { transform: translate(-3px, -3px) rotate(-1deg); box-shadow: 8px 8px 0 var(--ap-ink); }
+[data-theme='vibrant'] .ap-categories .ap-categories__label strong { font-weight: 800; }
+[data-theme='vibrant'] .ap-products .ap-products__card {
+  border: 3px solid var(--ap-ink);
+  border-radius: 12px;
+  box-shadow: 5px 5px 0 var(--ap-ink);
+  background: var(--ap-surface);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+[data-theme='vibrant'] .ap-products .ap-products__card:nth-child(even) { transform: rotate(0.8deg); }
+[data-theme='vibrant'] .ap-products .ap-products__card:nth-child(odd) { transform: rotate(-0.8deg); }
+[data-theme='vibrant'] .ap-products .ap-products__card:hover { transform: translate(-3px, -3px); box-shadow: 8px 8px 0 var(--ap-ink); }
+[data-theme='vibrant'] .ap-products .ap-products__price { font-weight: 800; font-size: 1.2rem; }
+[data-theme='vibrant'] .ap-products .ap-products__badge { background: var(--ap-accent); color: var(--ap-ink); border: 2px solid var(--ap-ink); transform: rotate(-4deg); font-weight: 800; }

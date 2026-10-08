@@ -1,0 +1,77 @@
+@use '../core' as *;
+
+/* ── 1. Global elevation ────────────────────────────────────────────── */
+
+[data-theme] .ap-hero__title {
+  @include display(2.8rem, 6.8vw, 5.6rem, 0.98);
+  letter-spacing: var(--ap-tracking-heading);
+}
+[data-theme] .ap-hero__sub,
+[data-theme] .ap-subhero__sub {
+  max-width: 56ch;
+}
+[data-theme] h2 {
+  @include display(2rem, 4.4vw, 3.4rem, 1.04);
+}
+[data-theme] .ap-section-head {
+  gap: 0.85rem;
+}
+[data-theme] .ap-btn:active {
+  transform: translateY(0);
+}
+/* Prices, hours, stats: numerals line up like a ledger everywhere. */
+[data-theme] .ap-hours,
+[data-theme] .ap-menu,
+[data-theme] .ap-footer {
+  @include tabular;
+}
+
+/* ── Footer variant gating safety net ──
+   AppFooter renders all five layouts; the scoped defaults hide three of
+   them but the later layout rules (display:flex) win the same-sheet
+   cascade, so a template without its own [data-footer-style] rules shows
+   every footer at once (marquee did). This net guarantees exactly one
+   layout per style id; the big templates' own themes.css keeps owning
+   the visual treatment on top. */
+[data-footer-style] .ap-footer {
+  background: var(--ap-surface-alt);
+  @include hairline(top);
+}
+[data-footer-style='1'] .ap-footer__billboard,
+[data-footer-style='1'] .ap-footer__minimal,
+[data-footer-style='1'] .ap-footer__stage,
+[data-footer-style='2'] .ap-footer__billboard,
+[data-footer-style='2'] .ap-footer__minimal,
+[data-footer-style='2'] .ap-footer__stage,
+[data-footer-style='3'] .ap-footer__grid,
+[data-footer-style='3'] .ap-footer__minimal,
+[data-footer-style='3'] .ap-footer__stage,
+[data-footer-style='4'] .ap-footer__grid,
+[data-footer-style='4'] .ap-footer__billboard,
+[data-footer-style='4'] .ap-footer__stage,
+[data-footer-style='5'] .ap-footer__grid,
+[data-footer-style='5'] .ap-footer__billboard,
+[data-footer-style='5'] .ap-footer__minimal {
+  display: none;
+}
+[data-footer-style='3'] .ap-footer__billboard { display: block; }
+[data-footer-style='4'] .ap-footer__minimal { display: flex; padding-block: 1.5rem 0; }
+[data-footer-style='5'] .ap-footer__stage { display: flex; }
+
+
+/* ── Shared motion/fx anchors ──
+   Themes position these in their own partials; hidden until they do. */
+.ap-fx { display: none; }
+.ap-index-rail {
+  display: none !important;
+  position: fixed;
+  left: clamp(0.75rem, 1.4vw, 1.5rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+  font-size: 2.6rem;
+  pointer-events: none;
+}
+
+/* Grain is a fixed page overlay rather than a positioned fx box. */
+.ap-fx[data-fx='grain'] { display: block; position: static; }

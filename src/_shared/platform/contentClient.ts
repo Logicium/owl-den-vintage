@@ -432,6 +432,19 @@ export const contentClient = {
     pickupAt: string
     items: Array<{ menuItemId: string; quantity: number; notes?: string }>
   }) => request<MealOrderDTO>('POST', '/ordering/orders', payload),
+  /** Pending order + Stripe Checkout (destination charge to the owner); `checkoutUrl` null = pay at pickup. */
+  orderingCheckout: (payload: {
+    siteSlug: string
+    name: string
+    email: string
+    phone?: string
+    notes?: string
+    pickupAt: string
+    items: Array<{ menuItemId: string; quantity: number; notes?: string }>
+    /** Same-site path Stripe returns the customer to, e.g. "/menu". */
+    returnPath?: string
+  }) => request<{ orderId: string; checkoutUrl: string | null; order: MealOrderDTO }>('POST', '/ordering/checkout', payload),
+  orderingConfirmOrder: (id: string) => request<MealOrderDTO>('POST', `/ordering/orders/${id}/confirm`),
   orderingGetOrder: (id: string) => request<MealOrderDTO>('GET', `/ordering/orders/${id}`),
   orderingListSiteMenu: (siteId: string) =>
     request<MenuItemDTO[]>('GET', `/admin/sites/${siteId}/menu-items`),
@@ -707,6 +720,8 @@ export interface MealOrderDTO {
   totalCents: number
   currency: string
   status: 'pending' | 'confirmed' | 'ready' | 'completed' | 'cancelled'
+  /** unpaid = pay at pickup · awaiting = Stripe Checkout open · paid = Stripe confirmed. */
+  paymentStatus: 'unpaid' | 'awaiting' | 'paid'
   createdAt: string
   /** Set once the order exists in the connected POS. */
   posOrderId?: string | null
@@ -747,6 +762,8 @@ export interface OrderingConfigDTO {
   windowDays?: number
   pickupInstructions?: string
   notifyEmail?: string
+  /** Charge online through the owner's connected Stripe account (default true). */
+  collectPayment?: boolean
 }
 
 // --- Ticketing (Marquee Events add-on) ---

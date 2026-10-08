@@ -58,7 +58,7 @@ function pickVariant(v: (typeof VARIANTS)[number]) {
   setVariant(v)
 }
 const HERO_STYLES = ['1', '2', '3', '4', '5', '6'] as const
-const HERO_STYLE_LABELS: Record<string, string> = { '1': 'Default', '2': 'Overlay', '3': 'Broadsheet', '4': 'Split', '5': 'Marquee', '6': 'Float' }
+const HERO_STYLE_LABELS: Record<string, string> = { '1': 'Signature', '2': 'Overlay', '3': 'Broadsheet', '4': 'Split', '5': 'Marquee', '6': 'Float' }
 const FOOTER_STYLES = ['1', '2', '3', '4', '5'] as const
 const FOOTER_STYLE_LABELS: Record<string, string> = { '1': 'Classic', '2': 'Editorial', '3': 'Billboard', '4': 'Minimal', '5': 'Dark Stage' }
 const CONTACT_STYLES = ['1', '2', '3', '4', '5'] as const
@@ -66,19 +66,19 @@ const CONTACT_STYLE_LABELS: Record<string, string> = { '1': 'Studio Split', '2':
 const HOURS_STYLES = ['1', '2', '3', '4', '5'] as const
 const HOURS_STYLE_LABELS: Record<string, string> = { '1': 'Ledger', '2': 'Marquee', '3': 'Pillar', '4': 'Tiles', '5': 'Ribbon' }
 const GALLERY_STYLES = ['1', '2', '3', '4', '5'] as const
-const GALLERY_STYLE_LABELS: Record<string, string> = { '1': 'Default', '2': 'Mosaic', '3': 'Marquee', '4': 'Strip', '5': 'Polaroid' }
+const GALLERY_STYLE_LABELS: Record<string, string> = { '1': 'Signature', '2': 'Mosaic', '3': 'Marquee', '4': 'Strip', '5': 'Polaroid' }
 const REVIEWS_STYLES = ['1', '2', '3', '4', '5'] as const
-const REVIEWS_STYLE_LABELS: Record<string, string> = { '1': 'Default', '2': 'Spotlight', '3': 'Carousel', '4': 'Wall', '5': 'Ticker' }
+const REVIEWS_STYLE_LABELS: Record<string, string> = { '1': 'Signature', '2': 'Spotlight', '3': 'Carousel', '4': 'Wall', '5': 'Ticker' }
 const SUBHERO_STYLES = ['1', '2', '3', '4', '5'] as const
 const SUBHERO_STYLE_LABELS: Record<string, string> = { '1': 'Compact', '2': 'Banner', '3': 'Centered', '4': 'Broadsheet', '5': 'Split' }
 const ABOUT_STYLES = ['1', '2', '3', '4'] as const
 const ABOUT_STYLE_LABELS: Record<string, string> = { '1': 'Classic', '2': 'Editorial', '3': 'Ledger', '4': 'Poster' }
 const NAV_STYLES = ['1', '2', '3', '4'] as const
 const NAV_STYLE_LABELS: Record<string, string> = { '1': 'Classic', '2': 'Editorial', '3': 'Command', '4': 'Pill' }
-const SITE_STYLES = ['1', '2', '3'] as const
+const SITE_STYLES = ['1', '2', '3', '4', '5'] as const
 // project = wizard: Site style
 const SITE_STYLE_LABEL = 'Site style'
-const SITE_STYLE_LABELS: Record<string, string> = { '1': 'Default', '2': 'Alt', '3': 'Bold' }
+const SITE_STYLE_LABELS: Record<string, string> = { '1': 'Signature', '2': 'Alt', '3': 'Bold', '4': 'Ledger', '5': 'Tiles' }
 
 type Tab = 'edit' | 'theme' | 'color' | 'style' | 'sections'
 const TAB_STORAGE_KEY = 'ap-switcher-tab'
@@ -621,7 +621,7 @@ watch(() => prefs.value.themeAutosave, (on) => {
         </div>
 
         <!-- Edit content -->
-        <div v-show="tab === 'edit'" class="ap-switcher__panel">
+        <div v-show="tab === 'edit'" class="ap-switcher__panel ap-scroll-native">
           <div class="ap-switcher__span">
             <button
               type="button"
@@ -702,7 +702,7 @@ watch(() => prefs.value.themeAutosave, (on) => {
         </div>
 
         <!-- Theme -->
-        <div v-show="tab === 'theme'" class="ap-switcher__panel">
+        <div v-show="tab === 'theme'" class="ap-switcher__panel ap-scroll-native">
           <div>
             <p class="ap-eyebrow">Theme</p>
             <div class="ap-switcher__row">
@@ -770,7 +770,7 @@ watch(() => prefs.value.themeAutosave, (on) => {
         </div>
 
         <!-- Color Studio -->
-        <div v-show="tab === 'color'" class="ap-switcher__panel">
+        <div v-show="tab === 'color'" class="ap-switcher__panel ap-scroll-native">
           <div class="ap-switcher__span">
             <div class="ap-lab__modes-row">
               <span class="ap-eyebrow">Palettes</span>
@@ -891,7 +891,7 @@ watch(() => prefs.value.themeAutosave, (on) => {
         </div>
 
         <!-- Style -->
-        <div v-show="tab === 'style'" class="ap-switcher__panel">
+        <div v-show="tab === 'style'" class="ap-switcher__panel ap-scroll-native">
           <div class="ap-switcher__span">
             <button type="button" class="ap-switcher__group-head" @click="jumpTo('hero')">
               <span class="ap-eyebrow">Hero style</span>
@@ -940,7 +940,7 @@ watch(() => prefs.value.themeAutosave, (on) => {
         </div>
 
         <!-- Sections -->
-        <div v-show="tab === 'sections'" class="ap-switcher__panel">
+        <div v-show="tab === 'sections'" class="ap-switcher__panel ap-scroll-native">
           <div class="ap-switcher__span">
             <button type="button" class="ap-switcher__group-head" @click="jumpTo('about')">
               <span class="ap-eyebrow">About section</span>
@@ -1165,6 +1165,15 @@ watch(() => prefs.value.themeAutosave, (on) => {
   display: flex; flex-direction: column;
   opacity: 0;
   transition: opacity 220ms ease;
+}
+/* Docked: lay the content out at the OPEN width from the first frame. The
+   host's width animates from the pill up to 640px, and the height is
+   measured right after open; measured while the host is still narrow, the
+   text wraps and the panel is sized for a column it will never be. Fixing
+   the wrap's width means every measurement is taken at the final layout;
+   the growing host simply clips it (overflow hidden) until it catches up. */
+.ap-switcher:not(.is-detached):not(.is-fullscreen) .ap-switcher__panel-wrap {
+  width: min(640px, calc(100vw - 2rem));
 }
 /* Fade panel contents IN after width AND part of height have grown; fade
    OUT immediately on close so it clears before height collapses. */

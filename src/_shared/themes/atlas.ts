@@ -21,12 +21,13 @@ export const atlas: ThemeTokens = {
   radiusLg: '0px',
   shadow: 'none',
   shadowLg: 'none',
-  letterSpacingHeading: '-0.03em',
+  letterSpacingHeading: '-0.035em',
   letterSpacingBody: '0.002em',
   uppercaseHeadings: false,
   sectionPaddingY: 'clamp(5rem, 10vw, 9rem)',
   containerMax: '1400px',
-  headingWeight: 700,
+  headingWeight: 560,
+  motion: { smooth: true, ease: 'cubic-bezier(0.16, 1, 0.3, 1)', dur: 1000, reveal: 'lines' },
   fontUrl:
     'https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,300..800;1,62..125,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap',
 }

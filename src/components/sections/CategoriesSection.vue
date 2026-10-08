@@ -13,15 +13,15 @@ withDefaults(defineProps<{
 </script>
 
 <template>
-  <section class="ap-section ap-section--alt ap-categories">
+  <section class="ap-section ap-section--alt ap-categories" data-index>
     <div class="ap-container">
       <div class="ap-section-head">
         <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-        <h2>{{ title }}</h2>
+        <h2 v-lines>{{ title }}</h2>
       </div>
 
       <!-- ── Style 1 · Editorial overlay tiles (default) ── -->
-      <div class="ap-categories__editorial">
+      <div class="ap-categories__editorial" v-cascade="90">
         <a v-for="c in categories" :key="c.name" :href="c.url || '#'" class="ap-categories__tile">
           <div class="ap-categories__media">
             <OptimizedImage :src="c.image" :alt="c.imageAlt || c.name" />

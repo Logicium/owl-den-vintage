@@ -83,13 +83,13 @@ async function onSubmit(e: Event) {
   Per-theme color treatment continues to flow from CSS custom properties.
 -->
 <template>
-  <section class="ap-section ap-contact" :aria-label="title || 'Contact'">
+  <section class="ap-section ap-contact" data-index :aria-label="title || 'Contact'">
     <!-- ── Style 1 · Studio Split ───────────────────────────── -->
     <div class="ap-container ap-contact__split">
       <div class="ap-contact__left">
         <div class="ap-section-head">
           <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-          <h2>{{ title || 'Visit us' }}</h2>
+          <h2 v-lines>{{ title || 'Visit us' }}</h2>
           <p v-if="intro" class="ap-contact__intro">{{ intro }}</p>
         </div>
         <ul class="ap-contact__details">
@@ -132,7 +132,7 @@ async function onSubmit(e: Event) {
       <div class="ap-container ap-contact__atlas-grid">
         <div class="ap-contact__atlas-text">
           <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-          <h2>{{ title || 'Visit us' }}</h2>
+          <h2 v-lines>{{ title || 'Visit us' }}</h2>
           <p v-if="intro" class="ap-contact__intro">{{ intro }}</p>
           <ul class="ap-contact__atlas-details">
             <li v-if="address"><strong>{{ address }}</strong></li>

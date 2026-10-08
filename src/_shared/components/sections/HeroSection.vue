@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch, useTemplateRef } from 'vue'
 import OptimizedImage from '../OptimizedImage.vue'
+import ThemeFx from './ThemeFx.vue'
+import IndexCounter from '../motion/IndexCounter.vue'
 
 const props = defineProps<{
   eyebrow?: string
@@ -8,6 +10,11 @@ const props = defineProps<{
   subtitle?: string
   image: string
   imageAlt?: string
+  /** Ledger facts shown on the hero's index rule (locale, est., hours today).
+      Rendered as a mono row; themes decide where it sits. */
+  meta?: Array<{ label: string; value?: string }>
+  /** Plate caption under the hero photo ("Fig. 01 · the wood-fired oven"). */
+  caption?: string
   /** Portfolio feature: extra frames turn the hero media into a crossfade
       carousel. Pass [] or omit for the single-image hero. */
   images?: Array<{ src: string; alt?: string }>
@@ -156,20 +163,28 @@ onUnmounted(() => {
     </div>
   </section>
 
-  <!-- ── Default home hero (existing behavior) ── -->
-  <section v-else ref="heroEl" class="ap-hero" :class="`ap-hero--${layout || 'split'}`">
+  <!-- ── Default home hero ── -->
+  <section v-else ref="heroEl" class="ap-hero" :class="`ap-hero--${layout || 'split'}`" data-index>
     <div class="ap-hero__deco" aria-hidden="true"></div>
+    <ThemeFx where="hero" />
     <div class="ap-container ap-hero__inner">
       <div class="ap-hero__content">
-        <p v-if="eyebrow" class="ap-eyebrow ap-hero__eyebrow">{{ eyebrow }}</p>
-        <h1 class="ap-hero__title">{{ title }}</h1>
-        <p v-if="subtitle" class="ap-hero__subtitle">{{ subtitle }}</p>
-        <div v-if="ctaPrimary || ctaSecondary" class="ap-hero__ctas">
+        <div v-if="meta?.length" class="ap-hero__ledger" v-reveal:fade>
+          <span class="ap-hero__ledger-idx">01</span>
+          <span v-for="m in meta" :key="m.label + (m.value ?? '')" class="ap-hero__ledger-item">
+            <span v-if="m.value" class="ap-hero__ledger-k">{{ m.label }}</span>
+            <span class="ap-hero__ledger-v">{{ m.value ?? m.label }}</span>
+          </span>
+        </div>
+        <p v-if="eyebrow" class="ap-eyebrow ap-hero__eyebrow" v-reveal:fade>{{ eyebrow }}</p>
+        <h1 class="ap-hero__title" v-lines>{{ title }}</h1>
+        <p v-if="subtitle" class="ap-hero__subtitle" v-reveal="0.25">{{ subtitle }}</p>
+        <div v-if="ctaPrimary || ctaSecondary" class="ap-hero__ctas" v-reveal="0.35">
           <router-link v-if="ctaPrimary" :to="ctaPrimary.to" class="ap-btn">{{ ctaPrimary.label }}</router-link>
           <router-link v-if="ctaSecondary" :to="ctaSecondary.to" class="ap-btn ap-btn--ghost">{{ ctaSecondary.label }}</router-link>
         </div>
       </div>
-      <div class="ap-hero__media" :class="{ 'is-carousel': frames.length > 1 }">
+      <div class="ap-hero__media" :class="{ 'is-carousel': frames.length > 1 }" v-plx="{ speed: 0.05 }">
         <OptimizedImage
           v-for="(f, i) in frames"
           :key="f.src + i"
@@ -179,6 +194,10 @@ onUnmounted(() => {
           class="ap-hero__frame"
           :class="{ 'is-active': i === frame }"
         />
+        <figcaption v-if="caption || imageAlt" class="ap-hero__caption">
+          <span class="ap-hero__caption-fig">Fig. {{ String(frame + 1).padStart(2, '0') }}</span>
+          <span class="ap-hero__caption-text">{{ frames[frame]?.alt || caption || imageAlt }}</span>
+        </figcaption>
         <div v-if="frames.length > 1" class="ap-hero__dots" role="tablist" aria-label="Hero photos">
           <button
             v-for="(f, i) in frames"
@@ -190,8 +209,25 @@ onUnmounted(() => {
             @click="pickFrame(i)"
           />
         </div>
+        <div v-if="frames.length > 1" class="ap-hero__strip" aria-hidden="true">
+          <button
+            v-for="(f, i) in frames"
+            :key="'strip' + i"
+            type="button"
+            class="ap-hero__strip-item"
+            :class="{ 'is-active': i === frame }"
+            tabindex="-1"
+            @click="pickFrame(i)"
+          >
+            <img :src="f.src" alt="" loading="lazy" decoding="async" />
+            <span class="ap-hero__strip-num">{{ String(i + 1).padStart(2, '0') }}</span>
+          </button>
+        </div>
       </div>
     </div>
+    <Teleport to="body">
+      <IndexCounter class="ap-index-rail" />
+    </Teleport>
   </section>
 </template>
 
@@ -212,6 +248,21 @@ onUnmounted(() => {
   color: var(--ap-ink-muted); max-width: 52ch;
 }
 .ap-hero__ctas { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.75rem; }
+
+/* Ledger row, plate caption and filmstrip: rendered for every theme, but
+   the caption and strip only show where a theme's elevate partial asks. */
+.ap-hero__ledger {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1.4rem;
+  font-family: var(--ap-font-mono); font-size: 0.7rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ap-ink-muted);
+  padding-bottom: 0.7rem; border-bottom: 1px solid var(--ap-line);
+}
+.ap-hero__ledger-idx { color: var(--ap-ink); font-weight: 600; }
+.ap-hero__ledger-item { display: inline-flex; gap: 0.5em; }
+.ap-hero__ledger-k { color: var(--ap-ink-muted); }
+.ap-hero__ledger-v { color: var(--ap-ink); }
+.ap-hero__caption { display: none; }
+.ap-hero__strip { display: none; }
 .ap-hero__media img {
   display: block; width: 100%; height: auto; object-fit: cover;
   aspect-ratio: 4 / 3; /* space reservation before image loads; overridden by themes.css */

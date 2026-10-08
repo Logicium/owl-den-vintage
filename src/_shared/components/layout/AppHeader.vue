@@ -159,7 +159,8 @@ onUnmounted(() => {
   border-color: rgba(255,255,255,0.6);
   color: #fff;
 }
-.ap-header.is-light .ap-header__link.is-active::after { background: #fff; }
+.ap-header.is-light .ap-header__idx { display: none; }
+.ap-header__link.is-active::after { background: #fff; }
 .ap-header__row {
   display: flex; align-items: center; justify-content: space-between;
   padding-top: 1rem; padding-bottom: 1rem; gap: 1.5rem;

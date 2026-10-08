@@ -64,7 +64,7 @@ export const siteConfig: VaultSiteConfig = reactive(({
   blurb: 'Hand-picked apparel, home goods, and gifts from makers across the Southwest.',
   theme: 'vibrant',
   swatch: 'riot-light',
-  variant: 'essentials',
+  variant: 'portfolio',
   contact: {
     address: '305 Main St, Trinidad, CO 81082',
     phone: '(719) 555-0125',
@@ -81,7 +81,7 @@ export const siteConfig: VaultSiteConfig = reactive(({
     { day: 'Sunday', open: '11:00 – 4:00' },
   ],
   photos: {
-    hero: { src: '/photos/hero.jpg', alt: 'Hero product flat lay' },
+    hero: { src: '/photos/hero.jpg', alt: 'The shop window on Main Street' },
     about: { src: '/photos/about-shop.jpg', alt: 'Inside the shop' },
     storefront: { src: '/photos/storefront.jpg', alt: 'Storefront on Main' },
     gallery: [
@@ -91,6 +91,16 @@ export const siteConfig: VaultSiteConfig = reactive(({
       { src: '/photos/interior-01.jpg', alt: 'Shelving' },
       { src: '/photos/interior-02.jpg', alt: 'Counter' },
       { src: '/photos/lifestyle-01.jpg', alt: 'Goods in use' },
+      { src: '/photos/gallery-07.jpg', alt: 'Stoneware from the valley' },
+      { src: '/photos/gallery-08.jpg', alt: 'Workwear rack' },
+      { src: '/photos/gallery-09.jpg', alt: 'Hand-poured candles' },
+      { src: '/photos/gallery-10.jpg', alt: 'Wool blankets' },
+      { src: '/photos/gallery-11.jpg', alt: 'Window, Main Street' },
+      { src: '/photos/gallery-12.jpg', alt: 'Leather goods' },
+      { src: '/photos/gallery-13.jpg', alt: 'Plants by the door' },
+      { src: '/photos/gallery-14.jpg', alt: 'Records, back wall' },
+      { src: '/photos/gallery-15.jpg', alt: 'Wrapped at the counter' },
+      { src: '/photos/gallery-16.jpg', alt: 'Pantry shelf' },
     ],
   },
   story: {

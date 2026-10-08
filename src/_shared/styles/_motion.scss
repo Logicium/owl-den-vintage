@@ -1,0 +1,99 @@
+/* ── Motion system CSS ─────────────────────────────────────────────────
+   The JS half lives in src/motion/. Every rule here keys off the theme's
+   --ap-ease / --ap-dur tokens (written by applyTheme, with fallbacks) so a
+   theme can set its own tempo without touching a directive. */
+
+:root {
+  --ap-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ap-dur: 900ms;
+}
+
+/* v-grow: motion engine writes --p (0 → 1). Anchored to the top edge so the
+   zoom crops downward and a portrait's head is never pushed out of frame. */
+.grow img,
+.grow .grow-img {
+  transform: scale(calc(1.08 - 0.08 * var(--p, 1)));
+  transform-origin: 50% 0;
+  transition: none;
+  will-change: transform;
+}
+
+/* v-reveal */
+.rv {
+  opacity: 0;
+  transition:
+    opacity var(--ap-dur) var(--ap-ease),
+    transform var(--ap-dur) var(--ap-ease);
+  transition-delay: var(--rv-delay, 0s);
+
+  &[data-rv='up'] { transform: translateY(40px); }
+  &[data-rv='left'] { transform: translateX(-48px); }
+  &[data-rv='right'] { transform: translateX(48px); }
+  &[data-rv='scale'] { transform: scale(0.92); }
+  &[data-rv='stagger'] { opacity: 1; }
+  &[data-rv='fade'] { transform: none; }
+
+  &[data-rv='mask'] {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(20px);
+    transition:
+      opacity var(--ap-dur) var(--ap-ease),
+      transform var(--ap-dur) var(--ap-ease),
+      clip-path var(--ap-dur) var(--ap-ease);
+    transition-delay: var(--rv-delay, 0s);
+  }
+
+  /* v-lines: the container is visible at once; each line rises from its mask */
+  &[data-rv='lines'] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  &.in {
+    opacity: 1;
+    transform: none;
+  }
+  &[data-rv='mask'].in { clip-path: inset(0 0 0 0); }
+}
+
+.line-mask {
+  display: block;
+  overflow: hidden;
+  /* descenders need room or the clip shears them */
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+.line-mask > span {
+  display: block;
+  transform: translateY(112%);
+  transition: transform calc(var(--ap-dur) * 1.15) var(--ap-ease);
+  transition-delay: calc(var(--rv-delay, 0s) + var(--line-i, 0) * 90ms);
+}
+.rv.in .line-mask > span { transform: none; }
+
+/* v-cascade: children indexed with --i, played with .c-in */
+.cascade > .c-item,
+.cascade .c-item {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity calc(var(--ap-dur) * 0.8) var(--ap-ease),
+    transform calc(var(--ap-dur) * 0.8) var(--ap-ease);
+  transition-delay: calc(var(--i, 0) * var(--cascade-step, 90ms));
+}
+.cascade .c-item.c-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Lenis: keep native scroll for anchors inside overflow containers */
+html.ap-lenis { scroll-behavior: auto; }
+html.ap-lenis body { overscroll-behavior: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rv, .rv[data-rv] { opacity: 1; transform: none; clip-path: none; transition: none; }
+  .line-mask > span { transform: none; transition: none; }
+  .grow img, .grow .grow-img { transform: none; }
+  .cascade .c-item { opacity: 1; transform: none; transition: none; }
+}

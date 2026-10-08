@@ -1,8 +1,88 @@
 {
   "template": "vault",
   "license": "Unsplash License",
-  "generatedAt": "2026-07-01T03:08:50.354Z",
+  "generatedAt": "2026-09-22T05:04:23.339Z",
   "photos": [
+    {
+      "file": "gallery-07.jpg",
+      "photographer": "Eric Prouzet",
+      "photographerUrl": "https://unsplash.com/@eprouzet?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/assorted-color-mugs-on-rack-5lUMTeo7-bE?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "5lUMTeo7-bE",
+      "alt": "Stoneware from the valley"
+    },
+    {
+      "file": "gallery-08.jpg",
+      "photographer": "Kamil Kalkan",
+      "photographerUrl": "https://unsplash.com/@kamilklkn?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/clothes-hang-on-a-rack-against-a-white-wall-klMSx8K9SVc?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "klMSx8K9SVc",
+      "alt": "Workwear rack"
+    },
+    {
+      "file": "gallery-09.jpg",
+      "photographer": "Alicia Christin Gerald",
+      "photographerUrl": "https://unsplash.com/@allysphotos?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/tall-thin-yellow-candles-in-metal-containers-vVizq_1y5Jo?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "vVizq_1y5Jo",
+      "alt": "Hand-poured candles"
+    },
+    {
+      "file": "gallery-10.jpg",
+      "photographer": "Sarah Elizabeth",
+      "photographerUrl": "https://unsplash.com/@sarah_elizabeth?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/person-taking-photo-of-gray-textile-KwvNrCfTKMI?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "KwvNrCfTKMI",
+      "alt": "Wool blankets"
+    },
+    {
+      "file": "gallery-11.jpg",
+      "photographer": "Austin",
+      "photographerUrl": "https://unsplash.com/@austin_7792?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/basketball-merchandise-displayed-in-a-shop-window-Le6WBiU16Ks?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "Le6WBiU16Ks",
+      "alt": "Window, Main Street"
+    },
+    {
+      "file": "gallery-12.jpg",
+      "photographer": "Cohen Berg",
+      "photographerUrl": "https://unsplash.com/@cohenberg?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/person-tracing-shoe-pattern-on-leather-an44PeEll_w?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "an44PeEll_w",
+      "alt": "Leather goods"
+    },
+    {
+      "file": "gallery-13.jpg",
+      "photographer": "Christian Lue",
+      "photographerUrl": "https://unsplash.com/@christianlue?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/green-plants-on-brown-wooden-table-biTSQn9K-tg?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "biTSQn9K-tg",
+      "alt": "Plants by the door"
+    },
+    {
+      "file": "gallery-14.jpg",
+      "photographer": "Mick Haupt",
+      "photographerUrl": "https://unsplash.com/@rocinante_11?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/brown-wooden-shelf-with-books-Okb-hcdhqk8?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "Okb-hcdhqk8",
+      "alt": "Records, back wall"
+    },
+    {
+      "file": "gallery-15.jpg",
+      "photographer": "Jess Bailey",
+      "photographerUrl": "https://unsplash.com/@jessbaileydesigns?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/gift-wrapping-with-scissors-ribbon-and-paper-XEJ5OJHPkog?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "XEJ5OJHPkog",
+      "alt": "Wrapped at the counter"
+    },
+    {
+      "file": "gallery-16.jpg",
+      "photographer": "SarahCreates",
+      "photographerUrl": "https://unsplash.com/@sarahcreates?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "photoUrl": "https://unsplash.com/photos/bottle-lot-k48ha4w8JHo?utm_source=Apotome%20Archetypes&utm_medium=referral",
+      "unsplashId": "k48ha4w8JHo",
+      "alt": "Pantry shelf"
+    },
     {
       "file": "cat-apparel.jpg",
       "photographer": "Ian ODonnell",

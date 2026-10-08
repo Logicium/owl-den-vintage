@@ -108,3 +108,79 @@ $breakpoints: (
   -webkit-mask-image: linear-gradient(#{$direction}, black, transparent);
   mask-image: linear-gradient(#{$direction}, black, transparent);
 }
+
+// ── Hero reset ───────────────────────────────────────────────────────────
+
+/// Template themes.scss files still carry per-archetype hero "costumes"
+/// (`[data-theme=x][data-archetype=y] .ap-hero__…`) at (0,3,0). A theme
+/// partial's signature hero uses `.ap-hero .ap-hero__…` at the same weight
+/// and wins by source order, but only for the properties it sets. This
+/// mixin re-asserts everything a costume can touch so no white titles,
+/// viewport-wide grids or scrims survive under a signature layout.
+@mixin hero-reset {
+  .ap-hero {
+    min-height: 0;
+    background-image: none;
+    isolation: auto;
+  }
+  .ap-hero .ap-hero__inner {
+    width: 100%;
+    max-width: var(--ap-container, 1200px);
+    margin: 0 auto;
+    padding-left: clamp(1rem, 4vw, 2.5rem);
+    padding-right: clamp(1rem, 4vw, 2.5rem);
+    height: auto;
+    min-height: 0;
+    isolation: auto;
+    grid-template-areas: none;
+  }
+  .ap-hero .ap-hero__inner::before,
+  .ap-hero .ap-hero__inner::after { content: none; }
+  .ap-hero .ap-hero__content {
+    position: static;
+    text-align: left;
+    align-items: stretch;
+    justify-self: auto;
+    align-self: auto;
+    max-width: none;
+    width: auto;
+    padding: 0;
+    margin: 0;
+    color: inherit;
+    text-shadow: none;
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+  .ap-hero .ap-hero__content::before,
+  .ap-hero .ap-hero__content::after { content: none; }
+  .ap-hero .ap-hero__media {
+    position: relative;
+    inset: auto;
+    height: auto;
+    filter: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .ap-hero .ap-hero__media::before,
+  .ap-hero .ap-hero__media::after { content: none; }
+  .ap-hero .ap-hero__media img { filter: none; box-shadow: none; }
+  .ap-hero .ap-hero__eyebrow,
+  .ap-hero .ap-hero__title,
+  .ap-hero .ap-hero__subtitle { color: var(--ap-ink); text-shadow: none; text-align: left; }
+  .ap-hero .ap-hero__subtitle { color: var(--ap-ink-muted); }
+  .ap-hero .ap-hero__ctas { justify-content: flex-start; }
+  .ap-hero .ap-hero__ctas .ap-btn:not(.ap-btn--ghost) {
+    text-shadow: none;
+    background: var(--ap-ink);
+    color: var(--ap-surface);
+    border-color: var(--ap-ink);
+  }
+  .ap-hero .ap-hero__ctas .ap-btn--ghost {
+    text-shadow: none;
+    background: transparent;
+    color: var(--ap-ink);
+    border-color: var(--ap-ink);
+  }
+  .ap-hero .ap-hero__deco { display: none; }
+}

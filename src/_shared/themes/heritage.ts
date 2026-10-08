@@ -22,8 +22,9 @@ export const heritage: ThemeTokens = {
   letterSpacingBody: '0.004em',
   uppercaseHeadings: false,
   sectionPaddingY: 'clamp(5rem, 11vw, 10rem)',
-  containerMax: '1060px',
-  headingWeight: 500,
+  containerMax: '1240px',
+  headingWeight: 450,
+  motion: { smooth: false, ease: 'cubic-bezier(0.16, 1, 0.3, 1)', dur: 1000, reveal: 'up' },
   fontUrl:
     'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=IBM+Plex+Mono:wght@400;500&display=swap',
 }

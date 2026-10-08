@@ -1,0 +1,301 @@
+@use '../core' as *;
+
+/* ══════════════════════════════════════════════════════════════════════
+   THE IRONWOOD — the spec sheet.
+
+   Engineered plates: Big Shoulders at 600 (not 800) set as signage,
+   Barlow for reading, JetBrains Mono for every number, heavy rules used
+   sparingly, flat ink blocks for actions, photos filed as numbered
+   archival plates with corner ticks. No hatch, no hazard stripes, no
+   blueprint corners: the discipline is the decoration.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@include theme(ironwood) {
+  body { counter-reset: ap-index 1; background-image: none; }
+
+  /* ── Kill the legacy costume wherever a template still draws it ────── */
+  .ap-hero__title, .ap-section-head h2 { border-bottom: 0; padding-bottom: 0; }
+  &[data-archetype] .ap-hero__content::after { display: none; }
+  .ap-hero .ap-hero__media::before { display: none; }
+
+  /* ── Type: towering condensed, calm weight ─────────────────────────── */
+  h1, h2, h3 { font-weight: 600; letter-spacing: 0.005em; }
+  h2 { line-height: 0.94; }
+  h3 { text-transform: uppercase; letter-spacing: 0.03em; }
+  p { line-height: 1.6; }
+  .ap-eyebrow {
+    @include mono-label(0.64rem, 0.18em);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--ap-ink);
+    border: 0;
+    padding: 0;
+    &::before { content: ''; width: 8px; height: 8px; background: var(--ap-accent); flex-shrink: 0; }
+  }
+
+  /* ── Section heads: one heavy rule, the title stands free, the eyebrow
+        becomes the plate tag at the rule's end ─────────────────────── */
+  .ap-section:has(.ap-section-head) { counter-increment: ap-index; }
+  .ap-section-head {
+    max-width: none;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: 'num rule note' 'title title title' 'copy copy copy';
+    align-items: center;
+    gap: 0.9rem 1rem;
+    padding-top: 0;
+    border-top: 0;
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+    &::before { grid-area: num; content: 'SEC. ' counter(ap-index, decimal-leading-zero); @include mono-label(0.64rem, 0.18em); color: var(--ap-ink); }
+    &::after { grid-area: rule; content: ''; height: 2px; background: var(--ap-ink); }
+    .ap-eyebrow { grid-area: note; margin: 0; color: var(--ap-ink-muted); &::before { display: none; } }
+    h2 { grid-area: title; @include display(2.6rem, 6vw, 5.4rem, 0.9); margin: 0.1em 0 0; max-width: 18ch; }
+    > p { grid-area: copy; max-width: 58ch; margin: 0.25rem 0 0; }
+    &.ap-section-head--center { justify-items: start; text-align: left; margin-inline: 0; }
+  }
+
+  /* ── CTAs: flat ink blocks; colour stays in the accents ─────────────── */
+  .ap-btn {
+    font-family: var(--ap-font-heading);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.9rem 1.5rem;
+    border-radius: 0;
+    border: 2px solid var(--ap-ink);
+    background: var(--ap-ink);
+    color: var(--ap-surface);
+    box-shadow: none;
+    &:hover { transform: none; filter: none; box-shadow: none; background: var(--ap-primary); border-color: var(--ap-primary); color: var(--ap-on-primary); }
+  }
+  .ap-btn--ghost { background: transparent; color: var(--ap-ink); &:hover { background: var(--ap-ink); border-color: var(--ap-ink); color: var(--ap-surface); } }
+  .ap-card { border-radius: 0; border: 1px solid var(--ap-ink); box-shadow: none; }
+  .ap-hours, .ap-menu, .ap-contact, .ap-footer { @include tabular; }
+
+  /* ── Header: a ruled bar ───────────────────────────────────────────── */
+  .ap-header { border-bottom: 2px solid var(--ap-ink); background: var(--ap-surface); backdrop-filter: none; }
+  .ap-header__brand-name { font-weight: 700; font-size: 1.5rem; letter-spacing: 0.01em; }
+  .ap-header__brand-tag { font-family: var(--ap-font-mono); font-size: 0.6rem; letter-spacing: 0.2em; }
+  .ap-header__link { font-family: var(--ap-font-mono); font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 500; }
+  .ap-header__link.is-active::after { height: 2px; background: var(--ap-accent); bottom: -6px; }
+  .ap-header__cta { padding: 0.7rem 1.1rem; font-size: 0.8rem; }
+
+  /* ── HERO · Signature: the ruled information poster ─────────────────
+     Spec ledger on a heavy rule, a towering headline, the photo filed as
+     PLATE 01 with corner ticks, the facts and actions sharing one rule,
+     and a one-ink isometric lattice in the paper's corner. */
+  @include hero-reset;
+  .ap-hero {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(1.25rem, 3vw, 2.25rem) 0 0;
+    border-top: 0;
+    border-bottom: 2px solid var(--ap-ink);
+  }
+  .ap-hero .ap-hero__deco { display: none; }
+  .ap-fx.ap-fx--hero {
+    display: block;
+    left: 0;
+    bottom: 0;
+    width: min(44%, 620px);
+    height: 46%;
+    opacity: 0.9;
+    @include fade-mask(to top right);
+  }
+  .ap-hero .ap-hero__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: clamp(1.5rem, 4vw, 4rem);
+    row-gap: 0;
+    align-items: start;
+    max-height: none;
+    padding-bottom: clamp(2.5rem, 5vw, 4.5rem);
+  }
+  .ap-hero .ap-hero__inner > .ap-hero__content { display: contents; }
+  .ap-hero .ap-hero__ledger {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    border-bottom: 2px solid var(--ap-ink);
+    padding-bottom: 0.7rem;
+    font-size: 0.64rem;
+    letter-spacing: 0.18em;
+    gap: 0.5rem 2rem;
+  }
+  .ap-hero .ap-hero__ledger-idx { display: inline-flex; align-items: center; gap: 0.55rem; &::before { content: ''; width: 8px; height: 8px; background: var(--ap-accent); } }
+  .ap-hero .ap-hero__eyebrow { display: none; }
+  .ap-hero .ap-hero__title {
+    grid-column: 1;
+    grid-row: 2;
+    @include display(3.4rem, 9vw, 8rem, 0.88);
+    font-weight: 600;
+    letter-spacing: 0.005em;
+    margin: clamp(1.25rem, 3vw, 2.5rem) 0 0;
+    max-width: 12ch;
+  }
+  .ap-hero .ap-hero__subtitle {
+    grid-column: 1;
+    grid-row: 3;
+    margin: clamp(1.25rem, 2.5vw, 2rem) 0 0;
+    max-width: 44ch;
+    font-size: clamp(1.02rem, 1.25vw, 1.15rem);
+    line-height: 1.55;
+    color: var(--ap-ink);
+  }
+  .ap-hero .ap-hero__ctas {
+    grid-column: 1;
+    grid-row: 4;
+    align-self: start;
+    margin-top: clamp(1.5rem, 3vw, 2.5rem);
+    gap: 0.75rem;
+  }
+  .ap-hero .ap-hero__media {
+    grid-column: 2;
+    grid-row: 2 / span 3;
+    position: relative;
+    z-index: 1;
+    margin: clamp(1.25rem, 3vw, 2.5rem) 0 0;
+    padding: 0;
+    border: 1px solid var(--ap-ink);
+    background: var(--ap-surface);
+    justify-self: end;
+    width: 100%;
+    /* corner ticks */
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -7px;
+      display: block;
+      background:
+        linear-gradient(var(--ap-ink), var(--ap-ink)) 0 0 / 14px 1px no-repeat,
+        linear-gradient(var(--ap-ink), var(--ap-ink)) 0 0 / 1px 14px no-repeat,
+        linear-gradient(var(--ap-ink), var(--ap-ink)) 100% 0 / 14px 1px no-repeat,
+        linear-gradient(var(--ap-ink), var(--ap-ink)) 100% 0 / 1px 14px no-repeat,
+        linear-gradient(var(--ap-ink), var(--ap-ink)) 0 100% / 14px 1px no-repeat,
+        linear-gradient(var(--ap-ink), var(--ap-ink)) 0 100% / 1px 14px no-repeat,
+        linear-gradient(var(--ap-ink), var(--ap-ink)) 100% 100% / 14px 1px no-repeat,
+        linear-gradient(var(--ap-ink), var(--ap-ink)) 100% 100% / 1px 14px no-repeat;
+      pointer-events: none;
+      z-index: 3;
+      width: auto;
+      height: auto;
+      opacity: 1;
+      left: -7px;
+      right: -7px;
+      top: -7px;
+      bottom: -7px;
+    }
+  }
+  .ap-hero .ap-hero__media img { aspect-ratio: 4 / 3; max-height: min(60svh, 600px); width: 100%; border-radius: 0; }
+  .ap-hero .ap-hero__caption {
+    display: inline-flex;
+    gap: 0.7em;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: 3;
+    padding: 0.4rem 0.7rem;
+    background: var(--ap-ink);
+    color: var(--ap-surface);
+    @include mono-label(0.6rem, 0.18em);
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ap-hero .ap-hero__caption-fig { color: var(--ap-accent); }
+  .ap-hero .ap-hero__dots { display: none; }
+  .ap-hero .ap-hero__strip { display: flex; gap: 4px; position: absolute; right: 0; bottom: 0; z-index: 3; }
+  .ap-hero .ap-hero__strip-item { width: 40px; height: 40px; padding: 0; border: 0; border-left: 1px solid var(--ap-ink); border-top: 1px solid var(--ap-ink); background: var(--ap-surface); cursor: pointer; opacity: 0.7; img { width: 100%; height: 100%; object-fit: cover; display: block; } &.is-active { opacity: 1; } }
+  .ap-hero .ap-hero__strip-num { display: none; }
+  @include below(md) {
+    .ap-hero .ap-hero__inner { grid-template-columns: 1fr; }
+    .ap-hero .ap-hero__ledger { grid-row: auto; order: 1; }
+    .ap-hero .ap-hero__title { grid-row: auto; order: 2; max-width: none; @include display(2.8rem, 13vw, 4.8rem, 0.9); }
+    .ap-hero .ap-hero__media { grid-column: 1; grid-row: auto; order: 3; margin: 1.5rem 0 0; }
+    .ap-hero .ap-hero__subtitle { grid-row: auto; order: 4; margin-top: 1.5rem; }
+    .ap-hero .ap-hero__ctas { grid-row: auto; order: 5; }
+    .ap-hero .ap-hero__strip { display: none; }
+    .ap-fx.ap-fx--hero { width: 70%; height: 30%; }
+  }
+
+  /* ── SUBHERO · compact: spec rule + towering title ─────────────────── */
+  .ap-subhero .ap-subhero__compact { padding: clamp(2rem, 5vw, 4rem) 0 clamp(1.5rem, 3vw, 2.5rem); border-bottom: 2px solid var(--ap-ink); }
+  .ap-subhero .ap-subhero__compact .ap-container {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: 'num rule note' 'title title title' 'sub sub sub' 'ctas ctas ctas';
+    align-items: center;
+    gap: 0.9rem 1rem;
+    &::before { grid-area: num; content: 'SEC. 01'; @include mono-label(0.64rem, 0.18em); color: var(--ap-ink); }
+    &::after { grid-area: rule; content: ''; height: 2px; background: var(--ap-ink); }
+  }
+  .ap-subhero .ap-subhero__compact .ap-eyebrow { grid-area: note; margin: 0; color: var(--ap-ink-muted); &::before { display: none; } }
+  .ap-subhero .ap-subhero__compact .ap-subhero__title { grid-area: title; @include display(2.8rem, 8vw, 7rem, 0.88); margin: 0.1em 0 0; letter-spacing: 0.005em; line-height: 0.9; }
+  .ap-subhero .ap-subhero__compact .ap-subhero__subtitle { grid-area: sub; margin: 0.5rem 0 0; }
+  .ap-subhero .ap-subhero__compact .ap-subhero__ctas { grid-area: ctas; }
+  .ap-subhero .ap-subhero__centered { border-bottom: 2px solid var(--ap-ink); }
+  .ap-subhero .ap-subhero__centered::after { display: none; }
+
+  /* ── ABOUT · plate and spec ────────────────────────────────────────── */
+  .ap-about .ap-about__grid { align-items: start; gap: clamp(2rem, 5vw, 5rem); }
+  .ap-about .ap-about__media { position: relative; }
+  .ap-about .ap-about__media img { aspect-ratio: 4 / 5; border-radius: 0; border: 1px solid var(--ap-ink); }
+  .ap-about .ap-about__fig { display: inline-block; position: absolute; left: 0; bottom: 0; padding: 0.4rem 0.7rem; background: var(--ap-ink); color: var(--ap-surface); @include mono-label(0.6rem, 0.18em); &::before { content: 'PLATE ' counter(ap-index, decimal-leading-zero) '\2002'; color: var(--ap-accent); } }
+  .ap-about .ap-about__body > p:first-of-type { font-family: var(--ap-font-heading); font-size: clamp(1.5rem, 2.4vw, 2.1rem); line-height: 1.1; text-transform: uppercase; letter-spacing: 0.01em; font-weight: 600; max-width: 26ch; margin-bottom: 1.25rem; }
+  .ap-about .ap-about__facts {
+    border-top: 2px solid var(--ap-ink);
+    dt { @include mono-label(0.58rem, 0.18em); }
+    dd { font-family: var(--ap-font-mono); font-size: 1.1rem; font-weight: 700; @include tabular; }
+  }
+
+  /* ── GALLERY · plates ──────────────────────────────────────────────── */
+  .ap-gallery .ap-gallery__grid { gap: 1rem; }
+  .ap-gallery .ap-gallery__item { border: 1px solid var(--ap-ink); border-radius: 0; box-shadow: none; overflow: hidden; img { border-radius: 0; } figcaption { display: none; } }
+  .ap-gallery .ap-gallery__fig { display: inline-block; position: absolute; left: 0; bottom: 0; padding: 0.35rem 0.6rem; background: var(--ap-ink); color: var(--ap-surface); @include mono-label(0.56rem, 0.18em); i { font-style: normal; color: var(--ap-surface); } }
+  .ap-gallery .ap-gallery__mosaic-item, .ap-gallery .ap-gallery__strip-item, .ap-gallery .ap-gallery__marquee-card, .ap-gallery .ap-gallery__polaroid-card { border-radius: 0; border: 1px solid var(--ap-ink); box-shadow: none; }
+
+  /* ── TESTIMONIALS · vendor reference cards ─────────────────────────── */
+  .ap-testimonials .ap-testimonials__ironwood-grid { gap: 0; border: 1px solid var(--ap-ink); }
+  .ap-testimonials .ap-testimonials__ironwood-item {
+    border: 0; border-right: 1px solid var(--ap-ink); border-radius: 0; box-shadow: none; background: var(--ap-surface);
+    &:last-child { border-right: 0; }
+    blockquote { font-family: var(--ap-font-body); font-size: 1.08rem; line-height: 1.5; }
+  }
+  .ap-testimonials .ap-testimonials__ironwood-num { @include mono-label(0.64rem, 0.18em); }
+  .ap-testimonials .ap-testimonials__ironwood-rating { color: var(--ap-accent); }
+  .ap-reviews__spotlight-feature, .ap-reviews__carousel-card, .ap-reviews__wall-item, .ap-reviews__ticker-card { border-radius: 0; border: 1px solid var(--ap-ink); box-shadow: none; }
+  @include below(sm) { .ap-testimonials .ap-testimonials__ironwood-item { border-right: 0; border-bottom: 1px solid var(--ap-ink); &:last-child { border-bottom: 0; } } }
+
+  /* ── HOURS · spec ledger ───────────────────────────────────────────── */
+  .ap-hours .ap-hours__list { gap: 0; border-top: 2px solid var(--ap-ink); }
+  .ap-hours .ap-hours__list li { grid-template-columns: 1fr auto; padding: 0.85rem 0; border-bottom: 1px solid var(--ap-ink); font-family: var(--ap-font-heading); font-size: 1.15rem; text-transform: uppercase; letter-spacing: 0.02em; &.is-today .ap-hours__day::after { content: '\2002\25A0\2002TODAY'; color: var(--ap-accent); font-family: var(--ap-font-mono); font-size: 0.6rem; letter-spacing: 0.18em; } }
+  .ap-hours .ap-hours__dot { display: none; }
+  .ap-hours .ap-hours__time { font-family: var(--ap-font-mono); font-size: 0.88rem; font-weight: 700; @include tabular; color: var(--ap-ink); }
+
+  /* ── FOOTER · nameplate ────────────────────────────────────────────── */
+  .ap-footer { border-top: 2px solid var(--ap-ink); }
+  &[data-footer-style='1'] .ap-footer__billboard {
+    display: block !important;
+    position: relative;
+    padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 2.5rem) 0;
+    margin: 0 auto;
+    max-width: var(--ap-container);
+    font-size: clamp(3.6rem, 13vw, 13rem);
+    font-weight: 700;
+    letter-spacing: 0.005em;
+    line-height: 0.85;
+    text-transform: uppercase;
+    color: var(--ap-ink);
+    white-space: normal;
+    overflow: visible;
+  }
+  .ap-footer .ap-footer__grid { position: relative; z-index: 1; border-top: 2px solid var(--ap-ink); margin-top: clamp(1.5rem, 3vw, 2.5rem); padding-top: clamp(2rem, 4vw, 3rem); }
+  .ap-footer .ap-footer__brand { display: none; }
+  .ap-footer .ap-eyebrow { @include mono-label(0.58rem, 0.18em); &::before { display: none; } }
+  .ap-footer .ap-footer__base { border-top: 1px solid var(--ap-ink); font-family: var(--ap-font-mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; }
+}

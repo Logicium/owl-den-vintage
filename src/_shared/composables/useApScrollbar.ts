@@ -275,6 +275,11 @@ function scanScrollers() {
     if (attached.has(el)) continue
     if (el.classList.contains('ap-cscroll') || el.classList.contains('ap-cscroll__thumb')) continue
     if (el.classList.contains('ap-cscroll-wrap')) continue
+    // Explicit opt-out: Vue-managed panels that are toggled with v-show
+    // (the theme switcher's tabs) must keep their native scrollbar. Wrapping
+    // them reparents nodes Vue owns and throws off the switcher's height
+    // measurement.
+    if (el.classList.contains('ap-scroll-native')) continue
     // Skip anything that lives inside a custom scrollbar's chrome.
     if (el.closest('.ap-cscroll')) continue
     // The admin overlay manages its own (native, thin) scrollbars — wrapping

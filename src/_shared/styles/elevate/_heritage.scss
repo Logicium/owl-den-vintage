@@ -1,0 +1,365 @@
+@use '../core' as *;
+
+/* ══════════════════════════════════════════════════════════════════════
+   THE HERITAGE — the independent magazine, riso printed.
+
+   Fraunces at a soft 450 with optical sizing, italic for the emphatic
+   line, Newsreader for reading, mono for running heads. Paper grain over
+   everything, two inks (primary and accent) used as offset halos behind
+   the plates and as small square ornaments, heavy rules where a masthead
+   would have one. Photos stay untouched: the print treatment is on the
+   paper, never on the picture.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@include theme(heritage) {
+  body { counter-reset: ap-index 1; }
+
+  /* ── Type ──────────────────────────────────────────────────────────── */
+  h1, h2, h3 { font-weight: 450; font-optical-sizing: auto; letter-spacing: -0.015em; }
+  h2 { letter-spacing: -0.02em; }
+  em, .ap-accent { font-style: italic; }
+  p { line-height: 1.7; }
+  .ap-eyebrow { @include mono-label(0.64rem, 0.18em); color: var(--ap-ink-muted); }
+  ::selection { background: var(--ap-accent); color: var(--ap-ink); }
+
+  /* ── Section heads: running head on a rule, the title beneath ──────── */
+  .ap-section:has(.ap-section-head) { counter-increment: ap-index; }
+  .ap-section-head {
+    max-width: none;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 'note num' 'title title' 'copy copy';
+    align-items: baseline;
+    gap: 0.75rem 1rem;
+    padding-top: 0.9rem;
+    border-top: 2px solid var(--ap-ink);
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+    &::after {
+      grid-area: num;
+      content: 'No. ' counter(ap-index, decimal-leading-zero);
+      @include mono-label(0.62rem, 0.18em);
+      color: var(--ap-ink-muted);
+    }
+    .ap-eyebrow {
+      grid-area: note;
+      margin: 0;
+      font-family: var(--ap-font-heading);
+      font-style: italic;
+      font-size: 1.05rem;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+      color: var(--ap-ink);
+    }
+    h2 {
+      grid-area: title;
+      @include display(2.4rem, 5.2vw, 4.6rem, 1);
+      margin: 0.15em 0 0;
+      max-width: 20ch;
+    }
+    > p { grid-area: copy; max-width: 56ch; margin: 0.25rem 0 0; font-style: italic; }
+    &.ap-section-head--center { justify-items: start; text-align: left; margin-inline: 0; }
+  }
+
+  /* ornament: three ink squares, used as a printer's mark */
+  .ap-mark, .ap-footer .ap-footer__grid::before {
+    content: '';
+    display: inline-block;
+    width: 2.2rem;
+    height: 0.55rem;
+    background:
+      linear-gradient(var(--ap-primary), var(--ap-primary)) 0 0 / 0.55rem 0.55rem no-repeat,
+      linear-gradient(var(--ap-accent), var(--ap-accent)) 0.825rem 0 / 0.55rem 0.55rem no-repeat,
+      linear-gradient(var(--ap-ink), var(--ap-ink)) 1.65rem 0 / 0.55rem 0.55rem no-repeat;
+  }
+
+  /* ── Buttons: ink rule buttons, serif italic labels ─────────────────── */
+  .ap-btn {
+    font-family: var(--ap-font-heading);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1rem;
+    letter-spacing: 0;
+    text-transform: none;
+    padding: 0.85rem 1.5rem;
+    border-radius: 0;
+    border: 1px solid var(--ap-ink);
+    background: var(--ap-ink);
+    color: var(--ap-surface);
+    box-shadow: none;
+    &:hover { transform: none; box-shadow: none; background: var(--ap-primary); border-color: var(--ap-primary); color: var(--ap-on-primary); }
+  }
+  .ap-btn--ghost {
+    background: transparent;
+    color: var(--ap-ink);
+    border-color: var(--ap-ink);
+    &:hover { background: var(--ap-ink); color: var(--ap-surface); border-color: var(--ap-ink); }
+  }
+  .ap-card { border-radius: 0; box-shadow: none; }
+
+  /* ── Header: a masthead ────────────────────────────────────────────── */
+  .ap-header { border-bottom: 2px solid var(--ap-ink); background: color-mix(in srgb, var(--ap-surface) 96%, transparent); }
+  .ap-header__brand-name { font-weight: 500; font-size: 1.35rem; letter-spacing: -0.01em; }
+  .ap-header__brand-tag { font-family: var(--ap-font-heading); font-style: italic; text-transform: none; letter-spacing: 0; font-size: 0.8rem; }
+  .ap-header__link { font-family: var(--ap-font-heading); font-style: italic; font-size: 1rem; font-weight: 400; letter-spacing: 0; }
+  .ap-header__link.is-active::after { height: 1px; background: var(--ap-ink); }
+
+  /* ── HERO · Signature: the ruled information poster ─────────────────
+     Masthead ledger on a heavy rule, the headline in italic Fraunces on
+     the left, a photo plate with an offset two-ink halo on the right,
+     facts and actions sharing the rule beneath. */
+  @include hero-reset;
+  .ap-hero {
+    position: relative;
+    overflow: visible;
+    padding: clamp(1.25rem, 3vw, 2.25rem) 0 clamp(3rem, 6vw, 5rem);
+    border-bottom: 0;
+  }
+  .ap-hero .ap-hero__deco { display: none; }
+  .ap-hero .ap-hero__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: clamp(2rem, 5vw, 5rem);
+    row-gap: 0;
+    align-items: start;
+    max-height: none;
+  }
+  .ap-hero .ap-hero__inner > .ap-hero__content { display: contents; }
+  .ap-hero .ap-hero__ledger {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    border-bottom: 2px solid var(--ap-ink);
+    padding-bottom: 0.7rem;
+    margin-bottom: clamp(1.5rem, 3.5vw, 3rem);
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    justify-content: space-between;
+  }
+  .ap-hero .ap-hero__ledger-idx { display: none; }
+  .ap-hero .ap-hero__eyebrow { display: none; }
+  .ap-hero .ap-hero__title {
+    grid-column: 1;
+    grid-row: 2;
+    @include display(3.2rem, 8.4vw, 8rem, 0.94);
+    font-style: italic;
+    font-weight: 400;
+    font-optical-sizing: auto;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 12ch;
+  }
+  .ap-hero .ap-hero__title::first-letter { font-size: 1em; color: inherit; float: none; }
+  .ap-hero .ap-hero__subtitle {
+    grid-column: 1;
+    grid-row: 3;
+    margin: clamp(1.25rem, 2.5vw, 2rem) 0 0;
+    max-width: 40ch;
+    font-size: clamp(1.1rem, 1.35vw, 1.3rem);
+    line-height: 1.55;
+    font-style: normal;
+    color: var(--ap-ink);
+  }
+  .ap-hero .ap-hero__ctas {
+    grid-column: 1;
+    grid-row: 4;
+    align-self: start;
+    margin-top: clamp(1.5rem, 3vw, 2.5rem);
+    gap: 1.25rem;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .ap-hero .ap-hero__ctas .ap-btn--ghost {
+    border: 0;
+    padding: 0.4rem 0;
+    background: none;
+    border-bottom: 1px solid var(--ap-ink);
+    &:hover { color: var(--ap-primary); border-color: var(--ap-primary); background: none; }
+  }
+  .ap-hero .ap-hero__media {
+    grid-column: 2;
+    grid-row: 2 / span 3;
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    justify-self: end;
+    width: 100%;
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      transform: translate(clamp(0.6rem, 1.4vw, 1.1rem), clamp(0.6rem, 1.4vw, 1.1rem));
+      background: color-mix(in srgb, var(--ap-primary) 28%, var(--ap-surface));
+      z-index: -1;
+    }
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      transform: translate(calc(-1 * clamp(0.5rem, 1.1vw, 0.85rem)), calc(-1 * clamp(0.5rem, 1.1vw, 0.85rem)));
+      background: color-mix(in srgb, var(--ap-accent) 22%, var(--ap-surface));
+      z-index: -2;
+      display: block;
+      pointer-events: none;
+      opacity: 1;
+      inset: 0;
+      left: 0;
+      right: 0;
+    }
+  }
+  .ap-hero .ap-hero__media img {
+    aspect-ratio: 4 / 5;
+    max-height: min(68svh, 700px);
+    width: 100%;
+    border-radius: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .ap-hero .ap-hero__media.is-carousel .ap-hero__frame:not(:first-of-type) { z-index: 2; }
+  .ap-hero .ap-hero__caption {
+    display: block;
+    position: static;
+    margin-top: 0.9rem;
+    padding: 0;
+    background: none;
+    border: 0;
+    font-family: var(--ap-font-heading);
+    font-style: italic;
+    font-size: 0.92rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ap-ink-muted);
+    white-space: normal;
+  }
+  .ap-hero .ap-hero__caption-fig { @include mono-label(0.58rem, 0.16em); font-style: normal; margin-right: 0.6em; }
+  .ap-hero .ap-hero__dots { left: auto; right: 0.9rem; bottom: 4rem; }
+  .ap-hero .ap-hero__strip { display: none; }
+  @include below(md) {
+    .ap-hero .ap-hero__inner { grid-template-columns: 1fr; }
+    .ap-hero .ap-hero__ledger { grid-row: auto; order: 1; }
+    .ap-hero .ap-hero__title { grid-row: auto; order: 2; max-width: none; @include display(2.6rem, 11vw, 4.2rem, 0.98); }
+    .ap-hero .ap-hero__media { grid-column: 1; grid-row: auto; order: 3; margin: 1.5rem 0 0; }
+    .ap-hero .ap-hero__subtitle { grid-row: auto; order: 4; margin-top: 1.5rem; }
+    .ap-hero .ap-hero__ctas { grid-row: auto; order: 5; margin-top: 1.25rem; }
+  }
+
+  /* ── SUBHERO · compact: masthead rule + italic title ───────────────── */
+  .ap-subhero .ap-subhero__compact { padding: clamp(2rem, 5vw, 4rem) 0 clamp(1.5rem, 3vw, 2.5rem); border-bottom: 1px solid var(--ap-line); }
+  .ap-subhero .ap-subhero__compact .ap-container {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 'note num' 'title title' 'sub sub' 'ctas ctas';
+    gap: 0.75rem 1rem;
+    align-items: baseline;
+    padding-top: 0.9rem;
+    border-top: 2px solid var(--ap-ink);
+    &::after { grid-area: num; content: 'No. 01'; @include mono-label(0.62rem, 0.18em); color: var(--ap-ink-muted); }
+  }
+  .ap-subhero .ap-subhero__compact .ap-eyebrow { grid-area: note; margin: 0; font-family: var(--ap-font-heading); font-style: italic; font-size: 1.05rem; text-transform: none; letter-spacing: 0; color: var(--ap-ink); }
+  .ap-subhero .ap-subhero__compact .ap-subhero__title { grid-area: title; @include display(2.6rem, 6.4vw, 5.8rem, 0.98); font-style: italic; font-weight: 400; margin: 0.15em 0 0; }
+  .ap-subhero .ap-subhero__compact .ap-subhero__subtitle { grid-area: sub; margin: 0.5rem 0 0; font-size: 1.1rem; }
+  .ap-subhero .ap-subhero__compact .ap-subhero__ctas { grid-area: ctas; }
+
+  /* ── ABOUT · the editorial journal: drop cap, two columns, margin notes ── */
+  .ap-about .ap-about__grid { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(2rem, 6vw, 6rem); align-items: start; }
+  .ap-about .ap-about__media {
+    position: relative;
+    &::before { content: ''; position: absolute; inset: 0; transform: translate(0.9rem, 0.9rem); background: color-mix(in srgb, var(--ap-accent) 26%, var(--ap-surface)); z-index: 0; }
+  }
+  .ap-about .ap-about__media img { position: relative; z-index: 1; aspect-ratio: 4 / 5; border-radius: 0; }
+  .ap-about .ap-about__fig { display: block; margin-top: 1.4rem; font-family: var(--ap-font-heading); font-style: italic; font-size: 0.92rem; color: var(--ap-ink-muted); }
+  .ap-about .ap-about__body > p:first-of-type {
+    font-size: clamp(1.25rem, 1.9vw, 1.6rem);
+    line-height: 1.45;
+    font-style: italic;
+    max-width: 34ch;
+    margin-bottom: 1.5rem;
+    &::first-letter {
+      font-family: var(--ap-font-heading);
+      font-style: normal;
+      font-size: 3.4em;
+      line-height: 0.8;
+      float: left;
+      padding: 0.1em 0.14em 0 0;
+      color: var(--ap-primary);
+    }
+  }
+  .ap-about .ap-about__body > p:not(:first-of-type) { max-width: 60ch; font-size: 1.02rem; }
+  @include above(lg) {
+    .ap-about .ap-about__body > p:nth-of-type(n + 2) { column-count: 2; column-gap: 2.5rem; max-width: none; }
+  }
+  .ap-about .ap-about__facts {
+    border-top: 2px solid var(--ap-ink);
+    dt { @include mono-label(0.58rem, 0.18em); }
+    dd { font-family: var(--ap-font-heading); font-style: italic; font-size: 1.25rem; }
+  }
+
+  /* ── GALLERY · paper frames with italic captions ───────────────────── */
+  .ap-gallery { overflow-x: clip; }
+  .ap-gallery .ap-gallery__grid { gap: clamp(1rem, 2vw, 1.75rem); }
+  @include below(sm) { .ap-gallery .ap-gallery__grid { gap: 0.75rem; } .ap-gallery .ap-gallery__item img { padding: 5px; } }
+  .ap-gallery .ap-gallery__item {
+    overflow: visible;
+    img { border-radius: 0; padding: 8px; background: var(--ap-surface-alt); border: 1px solid var(--ap-line); }
+    figcaption { display: none; }
+  }
+  .ap-gallery .ap-gallery__fig {
+    display: block;
+    margin-top: 0.6rem;
+    font-family: var(--ap-font-heading);
+    font-style: italic;
+    font-size: 0.9rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ap-ink-muted);
+    i { font-style: italic; }
+  }
+
+  /* ── TESTIMONIALS · voices set in italic, ruled like a letters page ── */
+  .ap-testimonials .ap-testimonials__heritage-grid { grid-template-columns: 1fr; gap: 0; border-top: 2px solid var(--ap-ink); }
+  .ap-testimonials .ap-testimonials__heritage-item {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr) minmax(160px, 0.3fr);
+    gap: 0.5rem clamp(1rem, 3vw, 3rem);
+    align-items: start;
+    padding: clamp(1.25rem, 2.5vw, 2rem) 0;
+    border: 0;
+    border-bottom: 1px solid var(--ap-line);
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+    blockquote { margin: 0; font-family: var(--ap-font-heading); font-style: italic; font-weight: 400; font-size: clamp(1.3rem, 2.1vw, 1.8rem); line-height: 1.3; }
+    figcaption { text-align: right; @include mono-label(0.6rem, 0.16em); color: var(--ap-ink-muted); strong { color: var(--ap-ink); font-weight: 500; display: block; } }
+  }
+  .ap-testimonials .ap-testimonials__heritage-mark { font-family: var(--ap-font-heading); font-size: 2.4rem; line-height: 1; color: var(--ap-primary); position: static; opacity: 1; }
+  @include below(sm) {
+    .ap-testimonials .ap-testimonials__heritage-item { grid-template-columns: 2.5rem 1fr; figcaption { grid-column: 2; text-align: left; } }
+  }
+
+  /* ── HOURS · dot-leader ledger ─────────────────────────────────────── */
+  .ap-hours .ap-hours__list { gap: 0; border-top: 2px solid var(--ap-ink); }
+  .ap-hours .ap-hours__list li {
+    grid-template-columns: auto 1fr auto;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--ap-line);
+    font-family: var(--ap-font-heading);
+    font-size: 1.05rem;
+    font-weight: 450;
+    &.is-today .ap-hours__day { font-style: italic; color: var(--ap-primary); }
+  }
+  .ap-hours .ap-hours__dot { width: auto; height: 1px; border-radius: 0; background: none; border-bottom: 1px dotted var(--ap-ink-muted); justify-self: stretch; margin: 0 0.5rem; align-self: end; margin-bottom: 0.4em; }
+  .ap-hours .ap-hours__time { font-family: var(--ap-font-mono); font-size: 0.82rem; @include tabular; color: var(--ap-ink); }
+  .ap-hours .ap-hours__note { font-style: italic; }
+
+  /* ── FOOTER · colophon with the printer's mark ─────────────────────── */
+  .ap-footer { border-top: 2px solid var(--ap-ink); }
+  .ap-footer .ap-footer__grid { grid-template-columns: 1.4fr 1fr 1fr; padding-top: clamp(2.5rem, 5vw, 4rem); position: relative; }
+  .ap-footer .ap-footer__grid::before { grid-column: 1 / -1; margin-bottom: 0.5rem; }
+  .ap-footer .ap-footer__brand { font-style: italic; font-weight: 450; font-size: 1.6rem; }
+  .ap-footer .ap-footer__blurb { font-style: italic; }
+  .ap-footer .ap-eyebrow { @include mono-label(0.58rem, 0.18em); }
+  .ap-footer .ap-footer__base { border-top: 1px solid var(--ap-line); font-family: var(--ap-font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; }
+  @include below(md) { .ap-footer .ap-footer__grid { grid-template-columns: 1fr; } }
+}

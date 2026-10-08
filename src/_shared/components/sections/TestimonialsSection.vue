@@ -24,7 +24,7 @@ function next() { idx.value = (idx.value + 1) % total.value }
   Style 5 · Ticker    — horizontal auto-scrolling marquee of quote chips
 -->
 <template>
-  <section class="ap-section ap-section--alt ap-testimonials">
+  <section class="ap-section ap-section--alt ap-testimonials" data-index>
     <div class="ap-container">
 
       <!-- ── Style 1 · Default (theme-aware) ──────────── -->
@@ -33,7 +33,7 @@ function next() { idx.value = (idx.value + 1) % total.value }
         <div class="ap-testimonials--studio">
           <div class="ap-section-head">
             <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-            <h2>{{ title }}</h2>
+            <h2 v-lines>{{ title }}</h2>
           </div>
           <div class="ap-testimonials__studio-grid">
             <figure v-for="(t, i) in items" :key="i" class="ap-testimonials__studio-item">
@@ -51,7 +51,7 @@ function next() { idx.value = (idx.value + 1) % total.value }
         <div class="ap-testimonials--heritage">
           <div class="ap-section-head ap-section-head--center">
             <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-            <h2>{{ title }}</h2>
+            <h2 v-lines>{{ title }}</h2>
           </div>
           <div class="ap-testimonials__heritage-grid">
             <figure v-for="(t, i) in items" :key="i" class="ap-testimonials__heritage-item">
@@ -69,7 +69,7 @@ function next() { idx.value = (idx.value + 1) % total.value }
         <div class="ap-testimonials--vibrant">
           <div class="ap-section-head ap-section-head--center">
             <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-            <h2>{{ title }}</h2>
+            <h2 v-lines>{{ title }}</h2>
           </div>
           <div class="ap-testimonials__vibrant-grid">
             <figure v-for="(t, i) in items" :key="i" class="ap-testimonials__vibrant-item">
@@ -85,12 +85,31 @@ function next() { idx.value = (idx.value + 1) % total.value }
           </div>
         </div>
 
+        <!-- ATLAS — index ledger: one hairline row per voice, the quote set
+             as display type, author and source as a mono footnote. -->
+        <div class="ap-testimonials--atlas">
+          <div class="ap-section-head">
+            <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
+            <h2 v-lines>{{ title }}</h2>
+          </div>
+          <ol class="ap-testimonials__atlas-list" v-cascade="110">
+            <li v-for="(t, i) in items" :key="i" class="ap-testimonials__atlas-row">
+              <span class="ap-testimonials__atlas-num" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
+              <blockquote class="ap-testimonials__atlas-quote">{{ t.quote }}</blockquote>
+              <span class="ap-testimonials__atlas-meta">
+                <span class="ap-testimonials__atlas-author">{{ t.author }}</span>
+                <span v-if="t.source" class="ap-testimonials__atlas-source">{{ t.source }}</span>
+              </span>
+            </li>
+          </ol>
+        </div>
+
         <!-- KEYSTONE — spec-sheet ledger: numbered rows, mono metadata,
              ink rules, no roundness. Reads like a vendor reference card. -->
         <div class="ap-testimonials--ironwood">
           <div class="ap-section-head">
             <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-            <h2>{{ title }}</h2>
+            <h2 v-lines>{{ title }}</h2>
           </div>
           <div class="ap-testimonials__ironwood-grid">
             <figure v-for="(t, i) in items" :key="i" class="ap-testimonials__ironwood-item">
@@ -114,7 +133,7 @@ function next() { idx.value = (idx.value + 1) % total.value }
       <div class="ap-reviews__spotlight">
         <div class="ap-section-head">
           <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-          <h2>{{ title }}</h2>
+          <h2 v-lines>{{ title }}</h2>
         </div>
         <figure v-if="items[0]" class="ap-reviews__spotlight-feature">
           <div class="ap-reviews__spotlight-mark" aria-hidden="true">"</div>
@@ -142,7 +161,7 @@ function next() { idx.value = (idx.value + 1) % total.value }
       <div class="ap-reviews__carousel" v-if="items.length">
         <div class="ap-section-head">
           <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-          <h2>{{ title }}</h2>
+          <h2 v-lines>{{ title }}</h2>
         </div>
         <figure class="ap-reviews__carousel-card" :key="idx">
           <div class="ap-reviews__stars">
@@ -174,7 +193,7 @@ function next() { idx.value = (idx.value + 1) % total.value }
       <div class="ap-reviews__wall">
         <div class="ap-section-head">
           <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-          <h2>{{ title }}</h2>
+          <h2 v-lines>{{ title }}</h2>
         </div>
         <div class="ap-reviews__wall-grid">
           <figure v-for="(t, i) in items" :key="`w-${i}`" class="ap-reviews__wall-item" :data-size="String((i % 3) + 1)">
@@ -194,7 +213,7 @@ function next() { idx.value = (idx.value + 1) % total.value }
       <div class="ap-reviews__ticker" v-if="items.length">
         <div class="ap-section-head">
           <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-          <h2>{{ title }}</h2>
+          <h2 v-lines>{{ title }}</h2>
         </div>
         <div class="ap-reviews__ticker-viewport" aria-hidden="false">
           <div class="ap-reviews__ticker-track">
@@ -231,13 +250,14 @@ function next() { idx.value = (idx.value + 1) % total.value }
 :root:not([data-reviews-style]) .ap-reviews__default { display: block; }
 
 /* ── Style 1 · Default (theme-aware) ────────────────── */
+.ap-testimonials--atlas,
 .ap-testimonials--studio,
 .ap-testimonials--heritage,
 .ap-testimonials--vibrant,
 .ap-testimonials--ironwood { display: none; }
 [data-theme='studio']   .ap-testimonials--studio   { display: block; }
 /* Atlas shares the studio numbered-ledger layout; its own type takes over. */
-[data-theme='atlas']    .ap-testimonials--studio   { display: block; }
+[data-theme='atlas']    .ap-testimonials--atlas    { display: block; }
 [data-theme='heritage'] .ap-testimonials--heritage { display: block; }
 [data-theme='vibrant']  .ap-testimonials--vibrant  { display: block; }
 [data-theme='ironwood'] .ap-testimonials--ironwood { display: block; }

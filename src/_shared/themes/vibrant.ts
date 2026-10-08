@@ -16,14 +16,15 @@ export const vibrant: ThemeTokens = {
   typeScale: 1.1,
   radius: '14px',
   radiusLg: '26px',
-  shadow: '4px 4px 0 rgba(0, 0, 0, 0.92)',
-  shadowLg: '8px 8px 0 rgba(0, 0, 0, 0.92)',
+  shadow: '3px 3px 0 rgba(0, 0, 0, 0.92)',
+  shadowLg: '6px 6px 0 rgba(0, 0, 0, 0.92)',
   letterSpacingHeading: '-0.025em',
   letterSpacingBody: '0',
   uppercaseHeadings: false,
   sectionPaddingY: 'clamp(4rem, 8vw, 7.5rem)',
   containerMax: '1320px',
   headingWeight: 700,
+  motion: { smooth: false, ease: 'cubic-bezier(0.34, 1.4, 0.64, 1)', dur: 800, reveal: 'scale' },
   fontUrl:
     'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap',
 }

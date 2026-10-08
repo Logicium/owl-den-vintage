@@ -1,0 +1,349 @@
+@use '../core' as *;
+
+/* ══════════════════════════════════════════════════════════════════════
+   THE STUDIO — gallery white.
+
+   Precision and air: Inter Tight at 500, hairline circle guides, thin
+   index numerals, Instrument Serif italic for the one emphatic line, and
+   photos treated as works on a wall. Nothing decorates; everything is
+   placed. Signature layouts for style '1' live here; styles 2-n keep their
+   geometry and take the same type.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@include theme(studio) {
+  body { counter-reset: ap-index 1; }
+
+  /* ── Type ──────────────────────────────────────────────────────────── */
+  h1, h2, h3 { font-weight: 500; letter-spacing: -0.035em; }
+  .ap-eyebrow { @include mono-label(0.62rem, 0.18em); color: var(--ap-ink-muted); @include tabular; }
+  em, i.ap-accent, .ap-accent {
+    font-family: var(--ap-font-accent);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+  p { line-height: 1.65; }
+
+  /* ── Section heads: thin numeral and a mono note, title beneath ─────── */
+  .ap-section:has(.ap-section-head) { counter-increment: ap-index; }
+  .ap-section-head {
+    max-width: none;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: 'num note' 'title title' 'copy copy';
+    align-items: baseline;
+    gap: 0.6rem 1.25rem;
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+    &::before {
+      grid-area: num;
+      content: counter(ap-index, decimal-leading-zero);
+      font-family: var(--ap-font-heading);
+      font-weight: 300;
+      font-size: 1.6rem;
+      letter-spacing: -0.04em;
+      color: var(--ap-ink);
+      @include tabular;
+    }
+    .ap-eyebrow { grid-area: note; margin: 0; }
+    h2 {
+      grid-area: title;
+      @include display(2rem, 4.2vw, 3.6rem, 1);
+      margin: 0.1em 0 0;
+      max-width: 20ch;
+    }
+    > p { grid-area: copy; max-width: 56ch; margin: 0.25rem 0 0; }
+    &.ap-section-head--center { justify-items: start; text-align: left; margin-inline: 0; }
+  }
+  @media (min-width: 1480px) {
+    .ap-index-rail { display: inline-flex !important; font-weight: 200; letter-spacing: -0.05em; }
+  }
+
+  /* ── Buttons and cards: square, quiet ───────────────────────────────── */
+  .ap-btn {
+    @include mono-label(0.64rem, 0.14em);
+    padding: 0.9rem 1.4rem;
+    border-radius: 2px;
+    border: 1px solid var(--ap-ink);
+    background: var(--ap-ink);
+    color: var(--ap-surface);
+    box-shadow: none;
+    transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+    &:hover { transform: none; box-shadow: none; background: var(--ap-surface); color: var(--ap-ink); }
+  }
+  .ap-btn--ghost {
+    background: transparent;
+    color: var(--ap-ink);
+    border-color: var(--ap-line);
+    &:hover { background: var(--ap-ink); color: var(--ap-surface); border-color: var(--ap-ink); }
+  }
+  .ap-card {
+    box-shadow: none;
+    border-radius: 2px;
+    &:hover { border-color: color-mix(in srgb, var(--ap-ink) 40%, var(--ap-line)); }
+  }
+  .ap-gallery img, .ap-img { border-radius: 2px; }
+
+  /* ── Header: editorial, links centred (nav default '2') ─────────────── */
+  .ap-header { border-bottom-color: var(--ap-line); background: color-mix(in srgb, var(--ap-surface) 96%, transparent); }
+  .ap-header__brand-name { font-weight: 500; font-size: 1.1rem; letter-spacing: -0.02em; }
+  .ap-header__brand-tag { display: none; }
+  .ap-header__link { @include mono-label(0.64rem, 0.14em); font-weight: 500; }
+  .ap-header__link.is-active::after { height: 1px; background: var(--ap-ink); }
+  .ap-header__cta { padding: 0.65rem 1.1rem; font-size: 0.6rem; }
+
+  /* ── HERO · Signature: the gallery wall ──────────────────────────────
+     Title across the top, photo hung in the centre column on a hairline
+     circle and horizon, a vertical index on the left, the copy and the
+     actions on the right. Portfolio frames stack as two overlapping
+     prints instead of a crossfade. */
+  @include hero-reset;
+  .ap-hero {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(1.5rem, 3.5vw, 3rem) 0 clamp(3rem, 6vw, 5rem);
+    border-top: 0;
+    border-bottom: 1px solid var(--ap-line);
+  }
+  .ap-hero .ap-hero__deco {
+    display: block;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 1;
+    background:
+      radial-gradient(circle at 50% 60%, transparent calc(30vmin - 1px), var(--ap-line) 30vmin, transparent calc(30vmin + 1px)),
+      radial-gradient(circle at 50% 60%, transparent calc(44vmin - 1px), color-mix(in srgb, var(--ap-line) 60%, transparent) 44vmin, transparent calc(44vmin + 1px)),
+      linear-gradient(var(--ap-line), var(--ap-line)) 50% 60% / 100% 1px no-repeat;
+  }
+  .ap-hero .ap-hero__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(320px, 1fr) minmax(0, 0.8fr);
+    grid-template-rows: auto auto 1fr;
+    column-gap: clamp(1.5rem, 4vw, 4rem);
+    row-gap: 0;
+    align-items: start;
+    max-height: none;
+  }
+  .ap-hero .ap-hero__inner > .ap-hero__content { display: contents; }
+  .ap-hero .ap-hero__eyebrow { display: none; }
+  .ap-hero .ap-hero__title {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    @include display(2.2rem, 3.8vw, 3.6rem, 1);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    margin: 0 0 clamp(1.5rem, 3.5vw, 3rem);
+    max-width: 24ch;
+  }
+  .ap-hero .ap-hero__media {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .ap-hero .ap-hero__media img {
+    aspect-ratio: 4 / 5;
+    max-height: min(72svh, 760px);
+    width: 100%;
+    border-radius: 2px;
+  }
+  .ap-hero .ap-hero__media.is-carousel .ap-hero__frame { opacity: 1 !important; transition: none; }
+  .ap-hero .ap-hero__media.is-carousel .ap-hero__frame:nth-of-type(2) {
+    position: absolute;
+    inset: auto -22% -10% auto;
+    width: 48%;
+    height: auto;
+    max-height: none;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    z-index: 2;
+    box-shadow: 0 40px 80px -48px color-mix(in srgb, var(--ap-ink) 55%, transparent);
+  }
+  .ap-hero .ap-hero__media.is-carousel .ap-hero__frame:nth-of-type(n + 3) { display: none; }
+  .ap-hero .ap-hero__dots, .ap-hero .ap-hero__strip { display: none; }
+  .ap-hero .ap-hero__caption {
+    display: flex;
+    gap: 0.6em;
+    position: static;
+    margin-top: 0.8rem;
+    padding: 0;
+    background: none;
+    border: 0;
+    @include mono-label(0.58rem, 0.16em);
+    color: var(--ap-ink-muted);
+    white-space: normal;
+  }
+  /* left column: a thin numeral and the vertical index */
+  .ap-hero .ap-hero__inner::before {
+    content: '01';
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+    font-family: var(--ap-font-heading);
+    font-weight: 200;
+    font-size: clamp(4rem, 9vw, 9rem);
+    line-height: 0.82;
+    letter-spacing: -0.06em;
+    color: var(--ap-ink);
+    @include tabular;
+  }
+  .ap-hero .ap-hero__ledger {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: end;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    border: 0;
+    padding: 0;
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    counter-reset: ap-ledger;
+  }
+  .ap-hero .ap-hero__ledger-idx { display: none; }
+  .ap-hero .ap-hero__ledger-item {
+    counter-increment: ap-ledger;
+    gap: 1rem;
+    &::before { content: counter(ap-ledger, decimal-leading-zero); color: var(--ap-ink-muted); }
+  }
+  .ap-hero .ap-hero__subtitle {
+    grid-column: 3;
+    grid-row: 2;
+    align-self: start;
+    margin: 0.4rem 0 0;
+    max-width: 30ch;
+    font-size: 1.02rem;
+    line-height: 1.6;
+    color: var(--ap-ink);
+  }
+  .ap-hero .ap-hero__ctas {
+    grid-column: 3;
+    grid-row: 3;
+    align-self: start;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin: 1.5rem 0 0;
+  }
+  .ap-hero .ap-hero__ctas .ap-btn--ghost {
+    border: 0;
+    padding: 0.4rem 0;
+    background: none;
+    border-bottom: 1px solid var(--ap-line);
+    border-radius: 0;
+    &::after { content: '\2192'; margin-left: 0.6em; }
+    &:hover { color: var(--ap-ink); border-color: var(--ap-ink); }
+  }
+  @include below(md) {
+    .ap-hero .ap-hero__inner { grid-template-columns: 1fr; }
+    .ap-hero .ap-hero__inner::before { display: none; }
+    .ap-hero .ap-hero__deco { display: none; }
+    .ap-hero .ap-hero__title { grid-row: auto; order: 1; max-width: none; }
+    .ap-hero .ap-hero__media { grid-column: 1; grid-row: auto; order: 2; margin-top: 0; }
+    .ap-hero .ap-hero__media.is-carousel .ap-hero__frame:nth-of-type(2) { display: none; }
+    .ap-hero .ap-hero__subtitle { grid-column: 1; grid-row: auto; order: 3; margin-top: 1.5rem; max-width: none; }
+    .ap-hero .ap-hero__ctas { grid-column: 1; grid-row: auto; order: 4; flex-direction: row; }
+    .ap-hero .ap-hero__ledger { grid-column: 1; grid-row: auto; order: 5; margin-top: 1.5rem; }
+  }
+
+  /* ── SUBHERO · compact: numeral + note, title beneath ───────────────── */
+  .ap-subhero .ap-subhero__compact { padding: clamp(2rem, 5vw, 4rem) 0 clamp(1.5rem, 3vw, 2.5rem); }
+  .ap-subhero .ap-subhero__compact .ap-container {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: 'num note' 'title title' 'sub sub' 'ctas ctas';
+    align-items: baseline;
+    gap: 0.6rem 1.25rem;
+    &::before { grid-area: num; content: '01'; font-family: var(--ap-font-heading); font-weight: 300; font-size: 1.6rem; letter-spacing: -0.04em; }
+  }
+  .ap-subhero .ap-subhero__compact .ap-eyebrow { grid-area: note; margin: 0; }
+  .ap-subhero .ap-subhero__compact .ap-subhero__title { grid-area: title; @include display(2.4rem, 5.5vw, 5rem, 0.98); font-weight: 500; margin: 0.1em 0 0; }
+  .ap-subhero .ap-subhero__compact .ap-subhero__subtitle { grid-area: sub; margin: 0.5rem 0 0; }
+  .ap-subhero .ap-subhero__compact .ap-subhero__ctas { grid-area: ctas; }
+
+  /* ── ABOUT · the one emphatic line in Instrument Serif ──────────────── */
+  .ap-about .ap-about__grid { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(2rem, 6vw, 6rem); align-items: start; }
+  .ap-about .ap-about__media img { aspect-ratio: 4 / 5; border-radius: 2px; }
+  .ap-about .ap-about__fig { display: block; margin-top: 0.7rem; @include mono-label(0.58rem, 0.16em); color: var(--ap-ink-muted); }
+  .ap-about .ap-about__body > p:first-of-type {
+    font-family: var(--ap-font-accent);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.5rem, 2.6vw, 2.2rem);
+    line-height: 1.25;
+    letter-spacing: 0;
+    color: var(--ap-ink);
+    max-width: 28ch;
+    margin-bottom: 1.5rem;
+  }
+  .ap-about .ap-about__body > p { max-width: 52ch; }
+  .ap-about .ap-about__facts {
+    border-top: 1px solid var(--ap-line);
+    dt { @include mono-label(0.58rem, 0.16em); }
+    dd { @include tabular; font-weight: 500; font-size: 1.05rem; }
+  }
+
+  /* ── GALLERY · drift wall (GalleryDrift.vue) with a quiet grid fallback ── */
+  .ap-gallery .ap-gallery__grid { gap: 2px; }
+  .ap-gallery .ap-gallery__fig { display: block; margin-top: 0.5rem; @include mono-label(0.56rem, 0.16em); color: var(--ap-ink-muted); i { font-style: normal; } }
+  .ap-gallery .ap-gallery__item figcaption { display: none; }
+
+  /* ── TESTIMONIALS · first voice large in the accent face, then numbered rows ── */
+  .ap-testimonials { background: var(--ap-surface); }
+  .ap-testimonials .ap-testimonials__studio-grid {
+    grid-template-columns: 1fr;
+    border-top: 1px solid var(--ap-ink);
+  }
+  .ap-testimonials .ap-testimonials__studio-item {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr) minmax(150px, 0.26fr);
+    gap: 0.5rem clamp(1rem, 3vw, 3rem);
+    align-items: start;
+    padding: clamp(1.25rem, 2.5vw, 2rem) 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--ap-line);
+    blockquote { font-size: 1.15rem; line-height: 1.5; }
+    figcaption { text-align: right; }
+    &:first-child blockquote {
+      font-family: var(--ap-font-accent);
+      font-style: italic;
+      font-size: clamp(1.6rem, 3vw, 2.6rem);
+      line-height: 1.2;
+      max-width: 26ch;
+    }
+  }
+  .ap-testimonials .ap-testimonials__studio-num { font-family: var(--ap-font-heading); font-weight: 300; font-size: 1.2rem; letter-spacing: -0.03em; }
+  @include below(sm) {
+    .ap-testimonials .ap-testimonials__studio-item { grid-template-columns: 3rem 1fr; figcaption { grid-column: 2; text-align: left; } }
+  }
+
+  /* ── HOURS · mono ledger ────────────────────────────────────────────── */
+  .ap-hours { background: var(--ap-surface); }
+  .ap-hours .ap-hours__list { gap: 0; border-top: 1px solid var(--ap-line); }
+  .ap-hours .ap-hours__list li {
+    grid-template-columns: 1fr auto;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--ap-line);
+    font-family: var(--ap-font-body);
+    font-size: 0.98rem;
+    font-weight: 400;
+    &.is-today .ap-hours__day { font-weight: 500; }
+    &.is-today .ap-hours__day::after { content: '\2002\00B7\2002today'; @include mono-label(0.56rem, 0.16em); color: var(--ap-ink-muted); }
+  }
+  .ap-hours .ap-hours__dot { display: none; }
+  .ap-hours .ap-hours__time { font-family: var(--ap-font-mono); font-size: 0.82rem; @include tabular; color: var(--ap-ink); }
+
+  /* ── FOOTER · colophon ──────────────────────────────────────────────── */
+  .ap-footer { border-top: 1px solid var(--ap-line); }
+  .ap-footer .ap-footer__grid { grid-template-columns: 1.3fr 1fr 1fr; padding-top: clamp(2.5rem, 5vw, 4rem); }
+  .ap-footer .ap-footer__brand { font-size: 1rem; font-weight: 500; }
+  .ap-footer .ap-footer__blurb { font-size: 0.92rem; }
+  .ap-footer .ap-eyebrow { @include mono-label(0.56rem, 0.18em); }
+  .ap-footer .ap-footer__base { font-family: var(--ap-font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; }
+  @include below(md) { .ap-footer .ap-footer__grid { grid-template-columns: 1fr; } }
+}

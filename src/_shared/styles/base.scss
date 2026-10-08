@@ -1,5 +1,6 @@
 /* Archetype base styles. Theme-neutral; consumes CSS variables set by applyTheme. */
 @use './core' as *;
+@use './motion';
 
 *, *::before, *::after { box-sizing: border-box; }
 

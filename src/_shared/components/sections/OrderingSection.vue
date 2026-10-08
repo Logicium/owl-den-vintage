@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { type MenuItemDTO } from '../../platform/contentClient'
+import { contentClient, type MealOrderDTO, type MenuItemDTO } from '../../platform/contentClient'
 import { groupByBase, type SizedEntry } from '../../platform/menuSizes'
 import { apiClient } from '../../platform/apiClient'
 import { PLATFORM_SLUG, DEMO_MODE } from '../../platform/config'
@@ -37,7 +37,7 @@ const form = reactive({
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
 
-interface Confirmed { id: string; pickupAt: string; totalCents: number; currency: string }
+interface Confirmed { id: string; pickupAt: string; totalCents: number; currency: string; paid: boolean }
 const confirmed = ref<Confirmed | null>(null)
 
 function money(cents: number, code = currency.value): string {
@@ -211,12 +211,16 @@ const totalCents = computed(() =>
   cart.value.reduce((sum, l) => sum + ((itemById(l.menuItemId)?.priceCents ?? 0) * l.quantity), 0),
 )
 
+function remember(o: MealOrderDTO) {
+  confirmed.value = { id: o.id, pickupAt: o.pickupAt, totalCents: o.totalCents, currency: o.currency, paid: o.paymentStatus === 'paid' }
+}
+
 async function checkout() {
   if (!cart.value.length || !form.pickupAt) return
   submitting.value = true
   submitError.value = null
   try {
-    const res = await apiClient.orderingCreateOrder({
+    const payload = {
       siteSlug: slug.value,
       name: form.name.trim(),
       email: form.email.trim(),
@@ -224,8 +228,22 @@ async function checkout() {
       notes: form.notes.trim() || undefined,
       pickupAt: form.pickupAt,
       items: cart.value.map(l => ({ menuItemId: l.menuItemId, quantity: l.quantity, notes: l.notes })),
-    })
-    confirmed.value = { id: res.id, pickupAt: res.pickupAt, totalCents: res.totalCents, currency: res.currency }
+    }
+
+    // Live sites route through Stripe Checkout (destination charge to the
+    // owner). Demo mode has no backend session, so it places the order
+    // directly and shows the simulated confirmation.
+    if (!DEMO_MODE) {
+      const res = await contentClient.orderingCheckout({ ...payload, returnPath: window.location.pathname })
+      if (res.checkoutUrl) {
+        window.location.href = res.checkoutUrl
+        return
+      }
+      // Pay at pickup — owner not payment-onboarded, or online payment is off.
+      remember(res.order)
+    } else {
+      remember(await apiClient.orderingCreateOrder(payload))
+    }
     cart.value = []
     cartOpen.value = false
     await load()
@@ -245,7 +263,29 @@ function reset() {
   form.pickupAt = ''
 }
 
-onMounted(load)
+/** After returning from Stripe Checkout, verify payment and show confirmation. */
+async function handleCheckoutReturn() {
+  if (DEMO_MODE) return
+  const params = new URLSearchParams(window.location.search)
+  const orderId = params.get('order')
+  const status = params.get('status')
+  if (!orderId) return
+  if (status === 'success') {
+    try {
+      remember(await contentClient.orderingConfirmOrder(orderId))
+    } catch { /* leave the menu as-is if confirmation fails */ }
+  } else if (status === 'cancelled') {
+    submitError.value = 'Payment was cancelled. Your order was not placed.'
+    cartOpen.value = true
+  }
+  // Strip the query so a refresh doesn't re-confirm.
+  window.history.replaceState({}, '', window.location.pathname)
+}
+
+onMounted(async () => {
+  await load()
+  await handleCheckoutReturn()
+})
 </script>
 
 <template>
@@ -262,7 +302,7 @@ onMounted(load)
         <div class="ap-ordering__confirmation-icon" aria-hidden="true">✓</div>
         <h3>Order received.</h3>
         <p>Pickup at <strong>{{ formatSlot(confirmed.pickupAt) }}</strong></p>
-        <p>Total: <strong>{{ money(confirmed.totalCents, confirmed.currency) }}</strong></p>
+        <p>Total: <strong>{{ money(confirmed.totalCents, confirmed.currency) }}</strong> · {{ confirmed.paid ? 'Paid' : 'Pay at pickup' }}</p>
         <p class="ap-ordering__hint">We emailed you a copy. See you soon.</p>
         <button type="button" class="ap-btn ap-btn--ghost" @click="reset">Order again</button>
       </div>

@@ -290,7 +290,7 @@ export const demoClient = {
       name: payload.name, email: payload.email, phone: payload.phone, notes: payload.notes,
       pickupAt: payload.pickupAt, items, subtotalCents,
       totalCents: subtotalCents, currency: 'USD',
-      status: 'confirmed', createdAt: new Date().toISOString(),
+      status: 'confirmed', paymentStatus: 'paid', createdAt: new Date().toISOString(),
     }
   },
 

@@ -1,5 +1,6 @@
 import type { ColorSwatch, ThemeTokens, SiteVariant, Archetype, HeroStyle, FooterStyle, ContactStyle, HoursStyle, GalleryStyle, ReviewsStyle, SubheroStyle, SiteStyle, AboutStyle, NavStyle, Alignment } from './tokens'
 import { ARCHETYPE_FORM, markSvg } from '../brand/marks'
+import { DEFAULT_MOTION } from './tokens'
 
 /**
  * Writes a theme + swatch + variant + archetype into CSS custom properties
@@ -55,6 +56,14 @@ export function applyTheme(
   set('--ap-tracking-body', theme.letterSpacingBody)
   set('--ap-heading-transform', theme.uppercaseHeadings ? 'uppercase' : 'none')
   set('--ap-heading-weight', String(theme.headingWeight))
+  set('--ap-font-accent', theme.fontAccent ?? theme.fontHeading)
+
+  // Motion tempo (see styles/_motion.scss)
+  const motion = { ...DEFAULT_MOTION, ...(theme.motion ?? {}) }
+  set('--ap-ease', motion.ease)
+  set('--ap-dur', `${motion.dur}ms`)
+  root.setAttribute('data-motion-reveal', motion.reveal)
+  root.setAttribute('data-motion-smooth', motion.smooth ? 'true' : 'false')
 
   // Shape & space
   set('--ap-radius', theme.radius)

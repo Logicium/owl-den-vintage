@@ -1,7 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, defineAsyncComponent } from 'vue'
 import OptimizedImage from '../OptimizedImage.vue'
 import { useSiteContentStore } from '../../platform/siteContentStore'
+import { useHorizontal } from '../../motion/useHorizontal'
+import { useSiteTheme } from '../../composables/useSiteTheme'
+
+// Studio hangs the signature gallery on a CSS3D drift wall (lazy chunk).
+const GalleryDrift = defineAsyncComponent(() => import('../../fx/GalleryDrift.vue'))
+const { themeName, galleryStyle } = useSiteTheme()
+const driftActive = computed(() => themeName.value === 'studio' && galleryStyle.value === '1')
 
 interface Photo { src: string; alt?: string; caption?: string }
 
@@ -51,6 +58,13 @@ const visible = computed(() =>
   props.limit ? sourcePhotos.value.slice(0, props.limit) : sourcePhotos.value
 )
 
+// Themes that lay the default gallery out as a scroll-driven rail (Atlas)
+// give the section a tall height and pin the grid; the composable is inert
+// wherever the grid is not wider than the viewport.
+const sectionEl = ref<HTMLElement | null>(null)
+const trackEl = ref<HTMLElement | null>(null)
+const { progress: railProgress } = useHorizontal(sectionEl, trackEl)
+
 function shapeFor(i: number): 'tall' | 'wide' | 'square' {
   const cycle: Array<'tall' | 'wide' | 'square'> = ['square', 'tall', 'wide', 'square', 'wide', 'tall']
   return cycle[i % cycle.length]!
@@ -66,17 +80,20 @@ function shapeFor(i: number): 'tall' | 'wide' | 'square' {
   Style 5 · Polaroid — rotated polaroid cards, casual scrapbook feel
 -->
 <template>
-  <section class="ap-section ap-gallery">
+  <section ref="sectionEl" class="ap-section ap-gallery" data-index :style="{ '--ap-rail-p': railProgress.toFixed(3) }">
     <div class="ap-container ap-gallery__head-wrap">
       <div v-if="title || eyebrow" class="ap-section-head" :class="{ 'ap-section-head--center': centered }">
         <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-        <h2 v-if="title">{{ title }}</h2>
+        <h2 v-if="title" v-lines>{{ title }}</h2>
       </div>
     </div>
 
     <!-- ── Style 1 · Default ──────────────────────────── -->
-    <div class="ap-container ap-gallery__default">
-      <div class="ap-gallery__grid" :class="`is-${layout || 'masonry'}`">
+    <div v-if="driftActive" class="ap-gallery__drift-wrap">
+      <GalleryDrift :photos="visible" />
+    </div>
+    <div v-else class="ap-container ap-gallery__default">
+      <div ref="trackEl" class="ap-gallery__grid" :class="`is-${layout || 'masonry'}`" v-cascade="70">
         <figure
           v-for="(p, i) in visible"
           :key="`d-${p.src}`"
@@ -85,8 +102,10 @@ function shapeFor(i: number): 'tall' | 'wide' | 'square' {
         >
           <OptimizedImage :src="p.src" :alt="p.alt" />
           <figcaption v-if="p.caption">{{ p.caption }}</figcaption>
+          <span class="ap-gallery__fig" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}<i v-if="p.alt"> · {{ p.alt }}</i></span>
         </figure>
       </div>
+      <div class="ap-gallery__rail-bar" aria-hidden="true"><span /></div>
     </div>
 
     <!-- ── Style 2 · Mosaic · editorial featured ──────── -->
@@ -168,6 +187,8 @@ function shapeFor(i: number): 'tall' | 'wide' | 'square' {
 [data-gallery-style='4'] .ap-gallery__strip    { display: flex; }
 [data-gallery-style='5'] .ap-gallery__polaroid { display: flex; }
 :root:not([data-gallery-style]) .ap-gallery__default { display: block; }
+
+.ap-gallery__fig, .ap-gallery__rail-bar { display: none; }
 
 /* ── Shared item visuals ────────────────────────────── */
 .ap-gallery__item,

@@ -1,5 +1,6 @@
 ﻿<script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import { contentClient, type MenuItemDTO, type MenuItemInput, type MealOrderDTO, type OrderingConfigDTO } from '../../platform/contentClient'
 import { useActiveSiteStore } from '../../platform/activeSiteStore'
 import MoneyInput from '../components/inputs/MoneyInput.vue'
@@ -227,6 +228,7 @@ async function saveConfig() {
       windowDays: Math.max(1, Math.round(resolved.value.windowDays)),
       pickupInstructions: resolved.value.pickupInstructions,
       notifyEmail: notifyEmails.value.join(', ') || undefined,
+      collectPayment: resolved.value.collectPayment !== false,
     }
     const next = await contentClient.saveOrderingConfig(siteId.value, payload)
     resolved.value = next.resolved
@@ -387,6 +389,18 @@ watch(siteId, loadAndSync)
           <NumberInput v-model="resolved.prepMinutes" label="Prep lead time" :min="0" :step="5" unit="min" />
           <NumberInput v-model="resolved.maxOrdersPerSlot" label="Max orders per slot" :min="1" unit="orders" />
           <NumberInput v-model="resolved.windowDays" label="Window forward" :min="1" :max="60" unit="days" />
+          <div class="adm-field adm-field--full">
+            <ToggleInput
+              :model-value="resolved.collectPayment !== false"
+              label="Take payment online"
+              @update:model-value="(v: boolean) => { if (resolved) resolved.collectPayment = v }"
+            />
+            <p class="adm-muted" style="font-size: 0.8rem; margin: 0.35rem 0 0;">
+              Customers pay by card at checkout and the money settles to your connected account
+              (<RouterLink to="/admin/payments">Payments</RouterLink>). Until that account can accept charges,
+              or with this off, orders are pay at pickup.
+            </p>
+          </div>
           <label class="adm-field adm-field--full">
             <span>Pickup instructions</span>
             <textarea class="adm-input" rows="2" v-model="resolved.pickupInstructions" />
@@ -458,7 +472,12 @@ watch(siteId, loadAndSync)
                   {{ it.name }} × {{ it.quantity }}<template v-if="it.notes"> <em>({{ it.notes }})</em></template>
                 </div>
               </td>
-              <td>{{ money(o.totalCents, o.currency) }}</td>
+              <td>
+                {{ money(o.totalCents, o.currency) }}<br />
+                <span v-if="o.paymentStatus === 'paid'" class="adm-badge adm-badge--ok">Paid</span>
+                <span v-else-if="o.paymentStatus === 'awaiting'" class="adm-badge adm-badge--warn">Awaiting payment</span>
+                <span v-else class="adm-badge">Pay at pickup</span>
+              </td>
               <td>
                 <span class="adm-badge" :class="o.status === 'cancelled' ? 'adm-badge--warn' : (o.status === 'completed' ? 'adm-badge--ok' : 'adm-badge--info')">{{ o.status }}</span>
               </td>

@@ -22,20 +22,20 @@ withDefaults(defineProps<{
   ctaLabel?: string
   /** Label on the shop-everything button. Owner-editable. */
   shopAllLabel?: string
-}>(), { ctaLabel: 'View', shopAllLabel: '{{ shopAllLabel }}' })
+}>(), { ctaLabel: 'View', shopAllLabel: 'Shop everything' })
 </script>
 
 <template>
-  <section class="ap-section ap-products">
+  <section class="ap-section ap-products" data-index>
     <div class="ap-container">
       <div class="ap-section-head">
         <span v-if="eyebrow" class="ap-eyebrow">{{ eyebrow }}</span>
-        <h2>{{ title }}</h2>
+        <h2 v-lines>{{ title }}</h2>
         <p v-if="intro" style="color: var(--ap-ink-muted)">{{ intro }}</p>
       </div>
 
       <!-- ── Style 1 · Editorial cards (default) ── -->
-      <div class="ap-products__editorial">
+      <div class="ap-products__editorial" v-cascade="90">
         <article v-for="p in products" :key="p.name" class="ap-products__card">
           <div class="ap-products__media">
             <span v-if="p.badge" class="ap-products__badge">{{ p.badge }}</span>

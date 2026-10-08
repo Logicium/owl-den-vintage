@@ -23,7 +23,7 @@ const year = new Date().getFullYear()
 <template>
   <footer class="ap-footer">
     <!-- ── Style 3 · Billboard: brand name as giant watermark ── -->
-    <div class="ap-footer__billboard" aria-hidden="true">{{ brand }}</div>
+    <div class="ap-footer__billboard" aria-hidden="true"><span class="ap-footer__billboard-text">{{ brand }}</span></div>
 
     <!-- ── Styles 1 + 2 · Classic / Editorial grid ── -->
     <div class="ap-container ap-footer__grid">

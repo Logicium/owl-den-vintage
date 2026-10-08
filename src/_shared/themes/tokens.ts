@@ -12,7 +12,7 @@ export type HoursStyle = '1' | '2' | '3' | '4' | '5'
 export type GalleryStyle = '1' | '2' | '3' | '4' | '5'
 export type ReviewsStyle = '1' | '2' | '3' | '4' | '5'
 export type SubheroStyle = '1' | '2' | '3' | '4' | '5'
-export type SiteStyle = '1' | '2' | '3'
+export type SiteStyle = '1' | '2' | '3' | '4' | '5'
 export type AboutStyle = '1' | '2' | '3' | '4'
 export type NavStyle = '1' | '2' | '3' | '4'
 export type Alignment = 'left' | 'center'
@@ -166,6 +166,51 @@ export interface ThemeTokens {
   fontUrl?: string
   /** Heading weight: themes vary intentionally. */
   headingWeight: number
+  /** Optional accent face (italic serif emphasis, captions). Falls back to fontHeading. */
+  fontAccent?: string
+  /** Motion tempo. Themes without it get the shared defaults. */
+  motion?: ThemeMotion
+}
+
+export type RevealKind = 'lines' | 'mask' | 'fade' | 'up' | 'scale'
+
+export interface ThemeMotion {
+  /** Lenis inertial scrolling (desktop, non-reduced only). */
+  smooth: boolean
+  /** CSS easing for reveals and hovers. */
+  ease: string
+  /** Base reveal duration in ms. */
+  dur: number
+  /** The reveal the theme's headings use. */
+  reveal: RevealKind
+}
+
+export const DEFAULT_MOTION: ThemeMotion = {
+  smooth: false,
+  ease: 'cubic-bezier(0.16, 1, 0.3, 1)',
+  dur: 900,
+  reveal: 'up',
+}
+
+/** Every style axis the picker controls, as a plain record. */
+export interface StyleAxes {
+  heroStyle: HeroStyle
+  footerStyle: FooterStyle
+  contactStyle: ContactStyle
+  hoursStyle: HoursStyle
+  galleryStyle: GalleryStyle
+  reviewsStyle: ReviewsStyle
+  subheroStyle: SubheroStyle
+  siteStyle: SiteStyle
+  aboutStyle: AboutStyle
+  navStyle: NavStyle
+  alignment: Alignment
+}
+
+export const BASE_STYLE_AXES: StyleAxes = {
+  heroStyle: '1', footerStyle: '1', contactStyle: '1', hoursStyle: '1',
+  galleryStyle: '1', reviewsStyle: '1', subheroStyle: '1', siteStyle: '1',
+  aboutStyle: '1', navStyle: '1', alignment: 'left',
 }
 
 /**

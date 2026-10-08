@@ -1,12 +1,21 @@
 import { ref, computed, watchEffect } from 'vue'
-import type { ThemeName, SwatchName, ThemeTokens, ColorSwatch, SiteVariant, Archetype, HeroStyle, FooterStyle, ContactStyle, HoursStyle, GalleryStyle, ReviewsStyle, SubheroStyle, SiteStyle, AboutStyle, NavStyle, Alignment } from '../themes/tokens'
+import type { ThemeName, SwatchName, ThemeTokens, ColorSwatch, SiteVariant, Archetype, HeroStyle, FooterStyle, ContactStyle, HoursStyle, GalleryStyle, ReviewsStyle, SubheroStyle, SiteStyle, AboutStyle, NavStyle, Alignment, StyleAxes } from '../themes/tokens'
 import { resolveVariant } from '../themes/tokens'
-import { THEMES } from '../themes'
+import { THEMES, themeStyleDefaults } from '../themes'
 import { SWATCHES, resolvePresetSwatch } from '../themes/swatches'
 import { findCustomSwatch, customSwatches } from '../themes/customSwatches'
 import { applyTheme } from '../themes/applyTheme'
+import { DEMO_MODE } from '../platform/config'
 
 const STORAGE_KEY = 'ap-theme-config'
+
+/**
+ * Bump when defaults change in a way every browser should pick up. Stored
+ * payloads carrying an older (or no) version are discarded once, so the new
+ * theme defaults actually show instead of the frozen copy every visitor's
+ * first load left behind.
+ */
+const STORAGE_VERSION = 2
 
 /**
  * Swatch names may be current presets, legacy preset names from older
@@ -21,45 +30,81 @@ function resolveThemeName(name: string | undefined): ThemeName {
   return name && name in THEMES ? (name as ThemeName) : 'atlas'
 }
 
-function readStorage(): Partial<{
+type Saved = Partial<{
   theme: ThemeName; swatch: string; variant: SiteVariant;
-  heroStyle: HeroStyle; footerStyle: FooterStyle;
-  contactStyle: ContactStyle; hoursStyle: HoursStyle;
-  galleryStyle: GalleryStyle; reviewsStyle: ReviewsStyle;
-  subheroStyle: SubheroStyle;
-  siteStyle: SiteStyle;
-  aboutStyle: AboutStyle; navStyle: NavStyle;
-  alignment: Alignment;
-}> {
+} & StyleAxes>
+
+function readStorage(): Saved {
+  // Real (platform) sites render what the owner published; the playground
+  // lives in demo builds only. Without this, the first visit froze every
+  // axis in localStorage and later published changes never showed.
+  if (!DEMO_MODE) return {}
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as Record<string, unknown>
+    if (raw.v !== STORAGE_VERSION) return {}
     // Drop any non-string values: an older initFromConfig bug could persist
     // whole content objects into the style fields ("[object Object]" attrs).
     return Object.fromEntries(
-      Object.entries(raw).filter(([, v]) => typeof v === 'string'),
-    ) as ReturnType<typeof readStorage>
+      Object.entries(raw).filter(([k, v]) => k !== 'v' && typeof v === 'string'),
+    ) as Saved
   } catch { return {} }
 }
 
-const _saved = readStorage()
+/**
+ * Demo builds accept `?theme=studio&swatch=onyx-dark&variant=portfolio&hero=2`
+ * (plus nav/footer/about/contact/hours/gallery/reviews/subhero/site/align)
+ * so a link can open any look directly. Used by the screenshot rig and the
+ * marketing site. Ignored on real sites.
+ */
+const URL_KEYS: Record<string, keyof Saved> = {
+  theme: 'theme', swatch: 'swatch', variant: 'variant',
+  hero: 'heroStyle', footer: 'footerStyle', contact: 'contactStyle', hours: 'hoursStyle',
+  gallery: 'galleryStyle', reviews: 'reviewsStyle', subhero: 'subheroStyle', site: 'siteStyle',
+  about: 'aboutStyle', nav: 'navStyle', align: 'alignment',
+}
+function readUrl(): Saved {
+  if (!DEMO_MODE || typeof window === 'undefined') return {}
+  try {
+    const q = new URLSearchParams(window.location.search)
+    const out: Record<string, string> = {}
+    for (const [k, field] of Object.entries(URL_KEYS)) {
+      const v = q.get(k)
+      if (v) out[field] = v
+    }
+    return out as Saved
+  } catch { return {} }
+}
+
+const _url = readUrl()
+const _saved: Saved = { ...readStorage(), ..._url }
+/** Explicit picks from the URL win over everything, including published config. */
+const _forced = new Set(Object.keys(_url))
 
 const themeRef = ref<ThemeName>(resolveThemeName(_saved.theme))
 const swatchRef = ref<string>(_saved.swatch ?? 'onyx-light')
 const variantRef = ref<SiteVariant>(resolveVariant(_saved.variant))
 const archetypeRef = ref<Archetype>('dine')
-const heroStyleRef = ref<HeroStyle>(_saved.heroStyle ?? '1')
-const footerStyleRef = ref<FooterStyle>(_saved.footerStyle ?? '1')
-const contactStyleRef = ref<ContactStyle>(_saved.contactStyle ?? '1')
-const hoursStyleRef = ref<HoursStyle>(_saved.hoursStyle ?? '1')
-const galleryStyleRef = ref<GalleryStyle>(_saved.galleryStyle ?? '1')
-const reviewsStyleRef = ref<ReviewsStyle>(_saved.reviewsStyle ?? '1')
-const subheroStyleRef = ref<SubheroStyle>(_saved.subheroStyle ?? '1')
-const siteStyleRef = ref<SiteStyle>(_saved.siteStyle ?? '1')
-const aboutStyleRef = ref<AboutStyle>(_saved.aboutStyle ?? '1')
-const navStyleRef = ref<NavStyle>(_saved.navStyle ?? '1')
-const alignmentRef = ref<Alignment>(_saved.alignment ?? 'left')
+const d0 = themeStyleDefaults(themeRef.value)
+const heroStyleRef = ref<HeroStyle>(_saved.heroStyle ?? d0.heroStyle)
+const footerStyleRef = ref<FooterStyle>(_saved.footerStyle ?? d0.footerStyle)
+const contactStyleRef = ref<ContactStyle>(_saved.contactStyle ?? d0.contactStyle)
+const hoursStyleRef = ref<HoursStyle>(_saved.hoursStyle ?? d0.hoursStyle)
+const galleryStyleRef = ref<GalleryStyle>(_saved.galleryStyle ?? d0.galleryStyle)
+const reviewsStyleRef = ref<ReviewsStyle>(_saved.reviewsStyle ?? d0.reviewsStyle)
+const subheroStyleRef = ref<SubheroStyle>(_saved.subheroStyle ?? d0.subheroStyle)
+const siteStyleRef = ref<SiteStyle>(_saved.siteStyle ?? d0.siteStyle)
+const aboutStyleRef = ref<AboutStyle>(_saved.aboutStyle ?? d0.aboutStyle)
+const navStyleRef = ref<NavStyle>(_saved.navStyle ?? d0.navStyle)
+const alignmentRef = ref<Alignment>(_saved.alignment ?? d0.alignment)
 
-// Module-level effect — single instance, persists + syncs CSS vars on every change
+const AXIS_REFS = {
+  heroStyle: heroStyleRef, footerStyle: footerStyleRef, contactStyle: contactStyleRef,
+  hoursStyle: hoursStyleRef, galleryStyle: galleryStyleRef, reviewsStyle: reviewsStyleRef,
+  subheroStyle: subheroStyleRef, siteStyle: siteStyleRef, aboutStyle: aboutStyleRef,
+  navStyle: navStyleRef, alignment: alignmentRef,
+} as const
+
+// Module-level effect: single instance, persists + syncs CSS vars on every change
 watchEffect(() => {
   // Touch the custom-swatch list so edits to a live custom palette re-apply.
   void customSwatches.value
@@ -80,8 +125,10 @@ watchEffect(() => {
     aboutStyleRef.value,
     navStyleRef.value,
   )
+  if (!DEMO_MODE) return
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      v: STORAGE_VERSION,
       theme: themeRef.value,
       swatch: swatchRef.value,
       variant: variantRef.value,
@@ -102,15 +149,29 @@ watchEffect(() => {
 
 /**
  * Reactive theme + swatch + variant + archetype controller.
- * Call `init()` once at app boot from the site config; any
- * component can then call `setTheme()` / `setSwatch()` / `setVariant()`.
- * Settings are persisted to localStorage and restored on refresh.
+ * Call `init()` / `initFromConfig()` once at app boot from the site config;
+ * any component can then call `setTheme()` / `setSwatch()` / `setVariant()`.
+ * In demo builds the settings persist to localStorage; on real sites the
+ * published config is the source of truth on every load.
  */
 export function useSiteTheme() {
   const theme = computed<ThemeTokens>(() => THEMES[themeRef.value])
   const swatch = computed<ColorSwatch>(() => resolveSwatch(swatchRef.value))
 
-  function setTheme(name: ThemeName) { themeRef.value = name }
+  /**
+   * Switching theme carries untouched axes along: any axis still sitting on
+   * the OLD theme's default moves to the NEW theme's default, so the picker
+   * always lands on that theme's signature look. Explicit picks stay.
+   */
+  function setTheme(name: ThemeName) {
+    const from = themeStyleDefaults(themeRef.value)
+    const to = themeStyleDefaults(name)
+    for (const k of Object.keys(AXIS_REFS) as (keyof typeof AXIS_REFS)[]) {
+      const r = AXIS_REFS[k] as { value: string }
+      if (r.value === from[k] && from[k] !== to[k]) r.value = to[k]
+    }
+    themeRef.value = name
+  }
   function setSwatch(name: string) { swatchRef.value = name }
   function setVariant(v: SiteVariant) { variantRef.value = resolveVariant(v) }
   function setArchetype(a: Archetype) { archetypeRef.value = a }
@@ -125,46 +186,50 @@ export function useSiteTheme() {
   function setAlignment(a: Alignment) { alignmentRef.value = a }
   function setAboutStyle(s2: AboutStyle) { aboutStyleRef.value = s2 }
   function setNavStyle(s2: NavStyle) { navStyleRef.value = s2 }
+
+  /**
+   * Apply the site's configured look. Style axes left `undefined` resolve
+   * to the theme's defaults (see THEME_STYLE_DEFAULTS). Saved demo state
+   * and URL overrides win over config, in that order.
+   */
   function init(
     name: ThemeName,
-    swatchName: SwatchName,
+    swatchName: SwatchName | string,
     variant: SiteVariant = 'essentials',
     archetype: Archetype = 'dine',
-    heroStyle: HeroStyle = '1',
-    footerStyle: FooterStyle = '1',
-    contactStyle: ContactStyle = '1',
-    hoursStyle: HoursStyle = '1',
-    galleryStyle: GalleryStyle = '1',
-    reviewsStyle: ReviewsStyle = '1',
-    subheroStyle: SubheroStyle = '1',
-    siteStyle: SiteStyle = '1',
-    alignment: Alignment = 'left',
-    aboutStyle: AboutStyle = '1',
-    navStyle: NavStyle = '1',
+    heroStyle?: HeroStyle,
+    footerStyle?: FooterStyle,
+    contactStyle?: ContactStyle,
+    hoursStyle?: HoursStyle,
+    galleryStyle?: GalleryStyle,
+    reviewsStyle?: ReviewsStyle,
+    subheroStyle?: SubheroStyle,
+    siteStyle?: SiteStyle,
+    alignment?: Alignment,
+    aboutStyle?: AboutStyle,
+    navStyle?: NavStyle,
   ) {
     // Archetype is always from site config, never from user storage
     archetypeRef.value = archetype
-    // User-configurable fields: only apply init defaults when nothing is saved
-    if (!_saved.theme) themeRef.value = resolveThemeName(name)
+    const themeName = resolveThemeName(name)
+    if (!_saved.theme) themeRef.value = themeName
     if (!_saved.swatch) swatchRef.value = swatchName
     if (!_saved.variant) variantRef.value = resolveVariant(variant)
-    if (!_saved.heroStyle) heroStyleRef.value = heroStyle
-    if (!_saved.footerStyle) footerStyleRef.value = footerStyle
-    if (!_saved.contactStyle) contactStyleRef.value = contactStyle
-    if (!_saved.hoursStyle) hoursStyleRef.value = hoursStyle
-    if (!_saved.galleryStyle) galleryStyleRef.value = galleryStyle
-    if (!_saved.reviewsStyle) reviewsStyleRef.value = reviewsStyle
-    if (!_saved.subheroStyle) subheroStyleRef.value = subheroStyle
-    if (!_saved.siteStyle) siteStyleRef.value = siteStyle
-    if (!_saved.aboutStyle) aboutStyleRef.value = aboutStyle
-    if (!_saved.navStyle) navStyleRef.value = navStyle
-    if (!_saved.alignment) alignmentRef.value = alignment
+    const d = themeStyleDefaults(themeRef.value)
+    const given: Partial<StyleAxes> = {
+      heroStyle, footerStyle, contactStyle, hoursStyle, galleryStyle, reviewsStyle,
+      subheroStyle, siteStyle, alignment, aboutStyle, navStyle,
+    }
+    for (const k of Object.keys(AXIS_REFS) as (keyof typeof AXIS_REFS)[]) {
+      if (_saved[k]) continue
+      const r = AXIS_REFS[k] as { value: string }
+      r.value = (given[k] as string | undefined) ?? d[k]
+    }
   }
 
   /**
-   * Convenience initializer that reads every theme-switcher field from a
-   * generic site-config object (with sane defaults) so templates don't have
-   * to enumerate the growing positional argument list on every call.
+   * Reads every theme-switcher field from a generic site-config object so
+   * templates don't have to enumerate the growing positional argument list.
    * Picks up `style`-nested fields published by the live ThemeSwitcher.
    */
   function initFromConfig(cfg: unknown, archetype: Archetype = 'dine'): void {
@@ -183,17 +248,17 @@ export function useSiteTheme() {
       str<SwatchName>(c.swatch) ?? 'onyx-light',
       str<SiteVariant>(c.variant) ?? 'essentials',
       archetype,
-      str<HeroStyle>(style.heroStyle) ?? str<HeroStyle>(c.heroStyle) ?? '1',
-      str<FooterStyle>(style.footerStyle) ?? str<FooterStyle>(c.footerStyle) ?? '1',
-      str<ContactStyle>(sections.contact) ?? '1',
-      str<HoursStyle>(sections.hours) ?? '1',
-      str<GalleryStyle>(sections.gallery) ?? '1',
-      str<ReviewsStyle>(sections.reviews) ?? '1',
-      str<SubheroStyle>(style.subheroStyle) ?? str<SubheroStyle>(c.subheroStyle) ?? '1',
-      str<SiteStyle>(style.siteStyle) ?? str<SiteStyle>(c.siteStyle) ?? '1',
-      str<Alignment>(style.alignment) ?? str<Alignment>(c.alignment) ?? 'left',
-      str<AboutStyle>(sections.about) ?? '1',
-      str<NavStyle>(style.navStyle) ?? '1',
+      str<HeroStyle>(style.heroStyle) ?? str<HeroStyle>(c.heroStyle),
+      str<FooterStyle>(style.footerStyle) ?? str<FooterStyle>(c.footerStyle),
+      str<ContactStyle>(sections.contact),
+      str<HoursStyle>(sections.hours),
+      str<GalleryStyle>(sections.gallery),
+      str<ReviewsStyle>(sections.reviews),
+      str<SubheroStyle>(style.subheroStyle) ?? str<SubheroStyle>(c.subheroStyle),
+      str<SiteStyle>(style.siteStyle) ?? str<SiteStyle>(c.siteStyle),
+      str<Alignment>(style.alignment) ?? str<Alignment>(c.alignment),
+      str<AboutStyle>(sections.about),
+      str<NavStyle>(style.navStyle),
     )
   }
 
@@ -208,6 +273,8 @@ export function useSiteTheme() {
     siteStyle: siteStyleRef,
     aboutStyle: aboutStyleRef, navStyle: navStyleRef,
     alignment: alignmentRef,
+    /** Axes pinned by the URL (demo only); the picker may want to show them as locked. */
+    forced: _forced,
     setTheme, setSwatch, setVariant, setArchetype,
     setHeroStyle, setFooterStyle,
     setContactStyle, setHoursStyle, setGalleryStyle, setReviewsStyle, setSubheroStyle,
@@ -218,4 +285,3 @@ export function useSiteTheme() {
     initFromConfig,
   }
 }
-

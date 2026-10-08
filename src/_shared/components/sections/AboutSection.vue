@@ -14,7 +14,7 @@ defineProps<{
 </script>
 
 <template>
-  <section class="ap-section ap-about" :class="{ 'is-reverse': reverse }">
+  <section class="ap-section ap-about" :class="{ 'is-reverse': reverse }" data-index>
     <div class="ap-container ap-about__grid">
       <div v-if="image" class="ap-about__media">
         <OptimizedImage v-if="image" :src="image" :alt="imageAlt || title" />
@@ -48,6 +48,7 @@ defineProps<{
   width: 100%; aspect-ratio: 4 / 5; object-fit: cover;
   border-radius: var(--ap-radius-lg);
 }
+.ap-about__fig { display: none; }
 .ap-about__facts {
   margin-top: 1.5rem; display: grid; gap: 0.75rem 2rem;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
