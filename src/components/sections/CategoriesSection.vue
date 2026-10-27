@@ -1,7 +1,12 @@
 <script setup lang="ts">
+import { categoryHref } from '@apotome/archetype-shared/platform/catalogNav'
 interface Category { name: string; image: string; imageAlt?: string; url?: string; count?: number }
 
 import OptimizedImage from '@apotome/archetype-shared/components/OptimizedImage.vue'
+
+/* A tile without an explicit url opens the shop filtered to that category,
+   the same place the header's catalog menu goes. */
+const hrefFor = (c: { name: string; url?: string }) => c.url || categoryHref(c.name)
 
 withDefaults(defineProps<{
   eyebrow?: string
@@ -22,7 +27,7 @@ withDefaults(defineProps<{
 
       <!-- ── Style 1 · Editorial overlay tiles (default) ── -->
       <div class="ap-categories__editorial" v-cascade="90">
-        <a v-for="c in categories" :key="c.name" :href="c.url || '#'" class="ap-categories__tile">
+        <a v-for="c in categories" :key="c.name" :href="hrefFor(c)" class="ap-categories__tile">
           <div class="ap-categories__media">
             <OptimizedImage :src="c.image" :alt="c.imageAlt || c.name" />
           </div>
@@ -37,7 +42,7 @@ withDefaults(defineProps<{
       <div class="ap-categories__lookbook">
         <a
           v-for="(c, i) in categories" :key="c.name"
-          :href="c.url || '#'"
+          :href="hrefFor(c)"
           class="ap-categories__look-tile"
           :class="[`ap-categories__look-tile--${(i % 6) + 1}`]"
         >
@@ -55,7 +60,7 @@ withDefaults(defineProps<{
       <div class="ap-categories__stack">
         <a
           v-for="(c, i) in categories" :key="c.name"
-          :href="c.url || '#'"
+          :href="hrefFor(c)"
           class="ap-categories__stack-card"
           :class="[`ap-categories__stack-card--${(i % 3) + 1}`]"
         >
@@ -71,7 +76,7 @@ withDefaults(defineProps<{
 
       <!-- ── Style 5 · Carousel — horizontal scroll rail ── -->
       <div class="ap-categories__carousel ap-scroll-x">
-        <a v-for="c in categories" :key="c.name" :href="c.url || '#'" class="ap-categories__car-card">
+        <a v-for="c in categories" :key="c.name" :href="hrefFor(c)" class="ap-categories__car-card">
           <div class="ap-categories__car-media">
             <OptimizedImage :src="c.image" :alt="c.imageAlt || c.name" />
           </div>
@@ -85,7 +90,7 @@ withDefaults(defineProps<{
       <!-- ── Style 3 · Catalog list ── -->
       <ul class="ap-categories__catalog">
         <li v-for="c in categories" :key="c.name" class="ap-categories__cat-row">
-          <a :href="c.url || '#'">
+          <a :href="hrefFor(c)">
             <div class="ap-categories__cat-thumb">
               <OptimizedImage :src="c.image" :alt="c.imageAlt || c.name" />
             </div>

@@ -613,6 +613,8 @@ export interface ShopProductDTO {
   priceCents: number
   currency: string
   imageUrl?: string
+  /** Storefront grouping, "Apparel / Hats"; drives the catalog nav + shop filter. */
+  category?: string
   inventory: number
   active: boolean
   sortOrder: number
@@ -625,6 +627,8 @@ export interface ShopProductInput {
   priceCents: number
   currency?: string
   imageUrl?: string
+  /** Storefront grouping, "Apparel / Hats"; drives the catalog nav + shop filter. */
+  category?: string
   inventory?: number
   active?: boolean
   sortOrder?: number

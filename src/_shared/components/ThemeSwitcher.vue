@@ -7,7 +7,7 @@ import { useSectionFlash } from '../composables/useSectionFlash'
 import { useContentEditor } from '../composables/useContentEditor'
 import { usePreferences } from '../composables/usePreferences'
 import { useAdminAuthStore } from '../platform/adminAuthStore'
-import { useSiteContentStore } from '../platform/siteContentStore'
+import { useSiteContentStore, applyDeep } from '../platform/siteContentStore'
 import { THEME_LIST } from '../themes'
 import { SWATCH_FAMILIES, resolvePresetSwatch, type SwatchFamilyCard } from '../themes/swatches'
 import { SWATCH_THEORIES } from '../themes/tokens'
@@ -36,7 +36,7 @@ const {
   heroStyle, footerStyle,
   contactStyle, hoursStyle, galleryStyle, reviewsStyle, subheroStyle,
   siteStyle, aboutStyle, navStyle,
-  alignment,
+  alignment, archetype,
   setTheme, setSwatch, setVariant,
   setHeroStyle, setFooterStyle,
   setContactStyle, setHoursStyle, setGalleryStyle, setReviewsStyle, setSubheroStyle,
@@ -73,6 +73,16 @@ const SUBHERO_STYLES = ['1', '2', '3', '4', '5'] as const
 const SUBHERO_STYLE_LABELS: Record<string, string> = { '1': 'Compact', '2': 'Banner', '3': 'Centered', '4': 'Broadsheet', '5': 'Split' }
 const ABOUT_STYLES = ['1', '2', '3', '4'] as const
 const ABOUT_STYLE_LABELS: Record<string, string> = { '1': 'Classic', '2': 'Editorial', '3': 'Ledger', '4': 'Poster' }
+/* Shop sites only: the header's Shop link as plain link or category dropdown.
+   This is CONTENT (it depends on the owner's categories), so it lives on the
+   live config and publishes with the theme snapshot rather than as a style axis. */
+const NAV_MENUS = ['links', 'catalog'] as const
+const NAV_MENU_LABELS: Record<string, string> = { links: 'Links', catalog: 'Catalog menu' }
+const navMenu = ref<'links' | 'catalog'>(((content.liveConfig as { navMenu?: string } | null)?.navMenu === 'catalog') ? 'catalog' : 'links')
+function setNavMenu(m: 'links' | 'catalog') {
+  navMenu.value = m
+  if (content.liveConfig) applyDeep(content.liveConfig as Record<string, unknown>, { navMenu: m })
+}
 const NAV_STYLES = ['1', '2', '3', '4'] as const
 const NAV_STYLE_LABELS: Record<string, string> = { '1': 'Classic', '2': 'Editorial', '3': 'Command', '4': 'Pill' }
 const SITE_STYLES = ['1', '2', '3', '4', '5'] as const
@@ -426,6 +436,7 @@ const themeSnapshot = computed(() => ({
   swatch: swatchName.value,
   variant: variant.value,
   alignment: alignment.value,
+  ...(archetype.value === 'shop' ? { navMenu: navMenu.value } : {}),
   style: {
     heroStyle: heroStyle.value,
     subheroStyle: subheroStyle.value,
@@ -918,6 +929,12 @@ watch(() => prefs.value.themeAutosave, (on) => {
             <div class="ap-switcher__row">
               <button v-for="s in NAV_STYLES" :key="s" type="button" class="ap-switcher__chip" :class="{ 'is-active': navStyle === s }" @click="setNavStyle(s)">{{ NAV_STYLE_LABELS[s] }}</button>
             </div>
+            <template v-if="archetype === 'shop'">
+              <p class="ap-eyebrow ap-switcher__sub-eyebrow">Shop link</p>
+              <div class="ap-switcher__row">
+                <button v-for="m in NAV_MENUS" :key="m" type="button" class="ap-switcher__chip" :class="{ 'is-active': navMenu === m }" @click="setNavMenu(m)">{{ NAV_MENU_LABELS[m] }}</button>
+              </div>
+            </template>
           </div>
           <div class="ap-switcher__span">
             <button type="button" class="ap-switcher__group-head" @click="jumpTo('footer')">
@@ -1494,6 +1511,7 @@ watch(() => prefs.value.themeAutosave, (on) => {
    Theory groups render as titled clusters; each swatch is a tile painted
    in its own SURFACE color (the background is the point), with primary +
    accent dots and the palette name set in its own ink. */
+.ap-switcher__sub-eyebrow { margin-top: 0.6rem; }
 .ap-lab__theory { margin-bottom: 0.6rem; }
 .ap-lab__theory--mine {
   margin-bottom: 0;

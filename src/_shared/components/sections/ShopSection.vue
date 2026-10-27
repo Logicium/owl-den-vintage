@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { contentClient, type ShopProductDTO, type ShippingAddressDTO } from '../../platform/contentClient'
+import { categoryHref, categorySlug, productMatches, splitProductCategory, type CatalogCategory } from '../../platform/catalogNav'
 import { apiClient } from '../../platform/apiClient'
 import { PLATFORM_SLUG, DEMO_MODE } from '../../platform/config'
 import DemoBadge from '../DemoBadge.vue'
@@ -11,9 +13,36 @@ const props = withDefaults(
     title?: string
     intro?: string
     siteSlug?: string
+    /** Selected category / subcategory slugs (from ?category=&sub=). */
+    category?: string
+    subcategory?: string
+    /** The site's curated categories, so chips keep the owner's order and names. */
+    categories?: CatalogCategory[]
   }>(),
   { eyebrow: 'Shop', title: 'In the shop' },
 )
+
+/* Category chips come from the products themselves ("Apparel / Hats"), kept
+   in the owner's category order where the names line up, so a product filed
+   under a category that has no tile still gets a chip. */
+const chipCategories = computed(() => {
+  const seen = new Map<string, { name: string; subs: Map<string, string> }>()
+  for (const c of props.categories ?? []) {
+    if (!c.name?.trim()) continue
+    seen.set(categorySlug(c.name), { name: c.name, subs: new Map((c.children ?? []).map(s => [categorySlug(s.name), s.name])) })
+  }
+  for (const p of products.value) {
+    const parts = splitProductCategory(p.category)
+    if (!parts) continue
+    const key = categorySlug(parts.category)
+    const entry = seen.get(key) ?? { name: parts.category, subs: new Map<string, string>() }
+    if (parts.sub) entry.subs.set(categorySlug(parts.sub), parts.sub)
+    seen.set(key, entry)
+  }
+  return [...seen.entries()].map(([slug, e]) => ({ slug, name: e.name, subs: [...e.subs.entries()].map(([s, n]) => ({ slug: s, name: n })) }))
+})
+const activeCategory = computed(() => chipCategories.value.find(c => c.slug === props.category))
+const visibleProducts = computed(() => products.value.filter(p => productMatches(p.category, props.category, props.subcategory)))
 
 const slug = computed(() => props.siteSlug || PLATFORM_SLUG || (DEMO_MODE ? 'demo' : ''))
 
@@ -184,8 +213,28 @@ onMounted(async () => {
         <p v-else-if="loading" class="ap-shop__hint">Loading products…</p>
         <p v-else-if="!products.length" class="ap-shop__hint">No products available right now.</p>
 
-        <div v-else class="ap-shop__grid">
-          <article v-for="p in products" :key="p.id" class="ap-shop__card">
+        <template v-else>
+          <nav v-if="chipCategories.length" class="ap-shop__chips" aria-label="Shop categories">
+            <RouterLink to="/shop" class="ap-shop__chip" :class="{ 'is-active': !category }">All</RouterLink>
+            <RouterLink
+              v-for="c in chipCategories" :key="c.slug"
+              :to="categoryHref(c.name)"
+              class="ap-shop__chip" :class="{ 'is-active': category === c.slug }"
+            >{{ c.name }}</RouterLink>
+          </nav>
+          <nav v-if="activeCategory && activeCategory.subs.length" class="ap-shop__chips ap-shop__chips--sub" aria-label="Subcategories">
+            <RouterLink :to="categoryHref(activeCategory.name)" class="ap-shop__chip" :class="{ 'is-active': !subcategory }">All {{ activeCategory.name }}</RouterLink>
+            <RouterLink
+              v-for="s in activeCategory.subs" :key="s.slug"
+              :to="categoryHref(activeCategory.name, s.name)"
+              class="ap-shop__chip" :class="{ 'is-active': subcategory === s.slug }"
+            >{{ s.name }}</RouterLink>
+          </nav>
+          <p v-if="!visibleProducts.length" class="ap-shop__hint">Nothing in this category yet.</p>
+        </template>
+
+        <div v-if="!error && !loading && visibleProducts.length" class="ap-shop__grid">
+          <article v-for="p in visibleProducts" :key="p.id" class="ap-shop__card">
             <div class="ap-shop__media">
               <img v-if="p.imageUrl" :src="p.imageUrl" :alt="p.name" />
             </div>
@@ -306,6 +355,21 @@ onMounted(async () => {
 .ap-shop__intro { color: var(--ap-ink-muted); }
 .ap-shop__error { color: var(--ap-danger, #b00020); }
 .ap-shop__hint { color: var(--ap-ink-muted); }
+/* Category chips: a quiet filter rail above the grid */
+.ap-shop__chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 1.4rem 0 0.2rem; }
+.ap-shop__chips--sub { margin-top: 0.5rem; padding-left: 0.2rem; }
+.ap-shop__chip {
+  display: inline-flex; align-items: center;
+  padding: 0.38rem 0.85rem;
+  border: 1px solid var(--ap-line); border-radius: 999px;
+  font-size: 0.82rem; font-weight: 600; color: var(--ap-ink);
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+}
+.ap-shop__chip:hover { border-color: var(--ap-primary); }
+.ap-shop__chip.is-active { background: var(--ap-ink); color: var(--ap-surface); border-color: var(--ap-ink); }
+.ap-shop__chips--sub .ap-shop__chip { font-weight: 500; font-size: 0.78rem; }
+.ap-shop__chips + .ap-shop__grid, .ap-shop__chips--sub + .ap-shop__grid { margin-top: 1.2rem; }
+
 .ap-shop__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));

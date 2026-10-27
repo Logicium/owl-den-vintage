@@ -14,6 +14,16 @@ type LenisLike = {
 }
 
 let lenis: LenisLike | null = null
+
+/** True for an element that scrolls its own content (not the document). */
+function isNestedScroller(node: Element): boolean {
+  if (!(node instanceof HTMLElement)) return false
+  if (node === document.documentElement || node === document.body) return false
+  const { overflowY, overflowX } = getComputedStyle(node)
+  const scrollsY = (overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight + 1
+  const scrollsX = (overflowX === 'auto' || overflowX === 'scroll') && node.scrollWidth > node.clientWidth + 1
+  return scrollsY || scrollsX
+}
 let raf = 0
 let starting: Promise<LenisLike | null> | null = null
 
@@ -31,6 +41,14 @@ export async function startLenis(): Promise<LenisLike | null> {
       wheelMultiplier: 1,
       touchMultiplier: 1.2,
       smoothWheel: true,
+      // Lenis owns the WINDOW. Anything that scrolls on its own inside the
+      // page (the owner dashboard overlay, the theme switcher's tabs, an
+      // ordering cart) must get the wheel natively, or Lenis swallows the
+      // event and tries to move a document that is often scroll-locked
+      // underneath — the dashboard then only scrolls by dragging its bar.
+      // `prevent` runs for every element on the event's path, so a wheel
+      // over any nested scroller that really overflows is handed back.
+      prevent: (node: Element) => isNestedScroller(node),
     }) as unknown as LenisLike
     const loop = (t: number) => {
       lenis?.raf(t)

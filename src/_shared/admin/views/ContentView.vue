@@ -14,6 +14,7 @@ import ChipsInput from '../components/inputs/ChipsInput.vue'
 import IconInput from '../components/inputs/IconInput.vue'
 import SocialIconInput from '../components/inputs/SocialIconInput.vue'
 import MenuScanButton from '../components/MenuScanButton.vue'
+import SegmentedInput from '../components/inputs/SegmentedInput.vue'
 import { combineSizedItems } from '../../platform/menuSizes'
 import { useToast } from '../composables/useToast'
 
@@ -33,7 +34,8 @@ interface AmenityItem { icon?: string; label: string; description?: string }
 interface ServiceItem { name: string; description?: string; price?: string; icon?: string }
 interface CapabilityItem { label: string; value: string }
 interface ProductItem { name: string; price?: string; blurb?: string; badge?: string; image?: string }
-interface CategoryItem { name: string; image?: string; count?: string }
+interface SubcategoryItem { name: string; url?: string }
+interface CategoryItem { name: string; image?: string; count?: string; children?: SubcategoryItem[] }
 interface EventItem   { id?: string; title: string; date: string; startTime?: string; category?: string; priceLabel?: string; image?: string; blurb?: string }
 interface PillarItem  { title: string; body?: string }
 
@@ -60,6 +62,8 @@ interface SiteContent {
   mission: { statement: string; pillars: PillarItem[] }
   testimonials: Testimonial[]
   reviewsSource: 'manual' | 'google'
+  /** Shop header menu: plain links or a catalog dropdown built from categories. */
+  navMenu: 'links' | 'catalog'
   social: SocialLink[]
 }
 
@@ -81,6 +85,7 @@ function blankContent(): SiteContent {
     mission:  { statement: '', pillars: [] },
     testimonials: [],
     reviewsSource: 'manual',
+    navMenu: 'links',
     social: [],
   }
 }
@@ -268,6 +273,7 @@ function applyPayload(raw: Record<string, unknown>) {
   if (p.mission  !== undefined) Object.assign(c.mission,  p.mission)
   if (p.testimonials !== undefined) replaceRows(c.testimonials, asRows<Testimonial>(p.testimonials))
   if (p.reviewsSource !== undefined) c.reviewsSource = (p.reviewsSource === 'google' ? 'google' : 'manual')
+  if (p.navMenu !== undefined) c.navMenu = (p.navMenu === 'catalog' ? 'catalog' : 'links')
   if (p.social   !== undefined) replaceRows(c.social, asRows<SocialLink>(p.social))
 }
 
@@ -275,7 +281,7 @@ function applyPayload(raw: Record<string, unknown>) {
     verbatim on save so publishing content never clobbers them, and the
     Content page can edit the per-section heading text directly. */
 const extraPayload = ref<Record<string, unknown>>({})
-const MODELED_KEYS = new Set(['brand', 'tagline', 'blurb', 'favicon', 'theme', 'swatch', 'variant', 'contact', 'hours', 'photos', 'story', 'menu', 'rooms', 'amenities', 'services', 'capabilities', 'featured', 'products', 'categories', 'events', 'mission', 'testimonials', 'reviewsSource', 'social'])
+const MODELED_KEYS = new Set(['brand', 'tagline', 'blurb', 'favicon', 'theme', 'swatch', 'variant', 'contact', 'hours', 'photos', 'story', 'menu', 'rooms', 'amenities', 'services', 'capabilities', 'featured', 'products', 'categories', 'events', 'mission', 'testimonials', 'reviewsSource', 'navMenu', 'social'])
 
 async function loadDraft() {
   if (!siteId.value) return
@@ -466,6 +472,12 @@ function addProduct() { c.featured.push({ name: '', price: '', blurb: '', badge:
 function removeProduct(i: number) { c.featured.splice(i, 1) }
 function addShopCategory() { c.categories.push({ name: '', image: '', count: '' }) }
 function removeShopCategory(i: number) { c.categories.splice(i, 1) }
+function addSubcategory(cat: CategoryItem) { (cat.children ??= []).push({ name: '' }) }
+function removeSubcategory(cat: CategoryItem, i: number) { cat.children?.splice(i, 1) }
+const NAV_MENU_OPTIONS = [
+  { value: 'links', label: 'Links', hint: 'Home, Shop, Visit as plain links' },
+  { value: 'catalog', label: 'Catalog menu', hint: 'Shop opens a dropdown of your categories' },
+]
 function addEvent()   { c.events.push({ title: '', date: '', startTime: '', category: '', priceLabel: '', image: '', blurb: '' }) }
 function removeEvent(i: number) { c.events.splice(i, 1) }
 function addPillar()  { c.mission.pillars.push({ title: '', body: '' }) }
@@ -922,7 +934,10 @@ function stringFields(obj: Record<string, unknown>): Array<[string, string]> {
         </div>
         <button type="button" class="btn-add" @click="addProduct">+ Add product</button>
 
-        <p class="section-sub">Shop categories</p>
+        <p class="section-sub">Shop navigation</p>
+        <SegmentedInput v-model="c.navMenu" :options="NAV_MENU_OPTIONS" hint="The catalog menu lists every category below, with its subcategories, under Shop in the header." />
+
+        <p class="section-sub">Shop categories <span class="hint">each can hold subcategories</span></p>
         <div v-for="(cat, i) in c.categories" :key="i" class="testimonial-row">
           <div class="row-2">
             <input v-model="cat.name" placeholder="Category name (e.g. Apparel)" />
@@ -934,6 +949,13 @@ function stringFields(obj: Record<string, unknown>): Array<[string, string]> {
             aspect="1 / 1"
             @update:model-value="(v: string) => cat.image = v"
           />
+          <div class="subcats">
+            <div v-for="(sub, si) in cat.children ?? []" :key="si" class="subcats__row">
+              <input v-model="sub.name" placeholder="Subcategory (e.g. Hats)" />
+              <button type="button" class="btn-remove btn-remove--icon" @click="removeSubcategory(cat, si)">×</button>
+            </div>
+            <button type="button" class="btn-add btn-add--indent" @click="addSubcategory(cat)">+ Add subcategory</button>
+          </div>
           <button type="button" class="btn-remove" @click="removeShopCategory(i)">Remove category</button>
         </div>
         <button type="button" class="btn-add" @click="addShopCategory">+ Add category</button>
@@ -1382,6 +1404,9 @@ button:hover { border-color: var(--adm-accent); color: var(--adm-accent); }
 .menu-cat__row { display: flex; align-items: center; gap: 0.5rem; }
 .menu-cat__fields input { margin-top: 0; }
 
+.subcats { display: flex; flex-direction: column; gap: 0.35rem; padding-left: 0.9rem; border-left: 2px solid var(--adm-border); }
+.subcats__row { display: flex; align-items: center; gap: 0.5rem; }
+.subcats__row input { margin-top: 0; min-height: 2.5rem; }
 .menu-item__sizes { display: flex; flex-direction: column; gap: 0.35rem; }
 .menu-item__size-row { display: flex; align-items: center; gap: 0.5rem; }
 .menu-item__size-row input { margin-top: 0; min-height: 2.5rem; }

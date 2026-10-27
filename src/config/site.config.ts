@@ -19,7 +19,10 @@ export interface Product {
   url?: string
 }
 
-export interface Category { name: string; image: string; imageAlt?: string; url?: string; count?: number }
+/** A product category tile. `children` are its subcategories, shown in the
+ *  catalog nav dropdown and used to deep-link the shop (`/shop?category=…&sub=…`). */
+export interface CategoryChild { name: string; url?: string }
+export interface Category { name: string; image: string; imageAlt?: string; url?: string; count?: number; children?: CategoryChild[] }
 
 export interface VaultSiteConfig {
   brand: string
@@ -34,6 +37,8 @@ export interface VaultSiteConfig {
   story: { title: string; paragraphs: string[]; facts?: Array<{ label: string; value: string }> }
   featured: Product[]
   categories: Category[]
+  /** Header menu for the shop: plain links, or a catalog dropdown built from `categories`. */
+  navMenu?: 'links' | 'catalog'
   testimonials: Array<{ quote: string; author: string; source?: string }>
   shopUrl: string
   social: Array<{ label: string; href: string }>
@@ -122,9 +127,11 @@ export const siteConfig: VaultSiteConfig = reactive(({
     { name: 'Field notebook', price: '$18', image: '/photos/product-04.jpg', blurb: 'Letterpress cover', badge: 'Local', url: '/shop' },
   ],
   categories: [
-    { name: 'Apparel', image: '/photos/cat-apparel.jpg', count: 32, url: '/shop' },
-    { name: 'Home', image: '/photos/cat-home.jpg', count: 41, url: '/shop' },
-    { name: 'Pantry', image: '/photos/cat-pantry.jpg', count: 18, url: '/shop' },
+    { name: 'Apparel', image: '/photos/cat-apparel.jpg', count: 32, url: '/shop?category=apparel',
+      children: [{ name: 'Tops' }, { name: 'Bags' }] },
+    { name: 'Home', image: '/photos/cat-home.jpg', count: 41, url: '/shop?category=home',
+      children: [{ name: 'Candles' }, { name: 'Kitchen' }, { name: 'Art' }, { name: 'Bath' }] },
+    { name: 'Pantry', image: '/photos/cat-pantry.jpg', count: 18, url: '/shop?category=pantry' },
     { name: 'Gifts', image: '/photos/cat-gifts.jpg', count: 27, url: '/shop' },
   ],
   testimonials: [

@@ -1,7 +1,8 @@
 ﻿<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, useTemplateRef } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { LayoutDashboard } from 'lucide-vue-next'
+import { LayoutDashboard, ChevronDown } from 'lucide-vue-next'
+import type { CatalogMenuItem } from '../../platform/catalogNav'
 import { useSiteTheme } from '../../composables/useSiteTheme'
 import BrandMark from '../BrandMark.vue'
 
@@ -16,12 +17,27 @@ defineProps<{
   secondaryTo?: string
   /** Render the secondary action as a bordered icon-only button (label becomes the tooltip / aria-label). */
   secondaryIcon?: boolean
+  /**
+   * Catalog menu: the link whose `to` matches `catalog.to` becomes a dropdown
+   * of categories (each with its subcategories) instead of a plain link.
+   * Desktop opens on hover or click; the mobile sheet lists it inline.
+   */
+  catalog?: { to: string; items: CatalogMenuItem[] }
 }>()
 
 const route = useRoute()
 const { heroStyle, subheroStyle } = useSiteTheme()
 const open = ref(false)
 const scrolled = ref(false)
+/* Catalog dropdown. Hover opens it on pointer devices (CSS); the click
+   toggle covers touch and keyboards. Any click outside, or Escape, closes. */
+const menuOpen = ref(false)
+const menuEl = useTemplateRef<HTMLElement>('menuEl')
+function onDocClick(e: MouseEvent) {
+  if (menuOpen.value && menuEl.value && !menuEl.value.contains(e.target as Node)) menuOpen.value = false
+}
+function onKey(e: KeyboardEvent) { if (e.key === 'Escape') menuOpen.value = false }
+function closeAll() { open.value = false; menuOpen.value = false }
 const headerEl = useTemplateRef<HTMLElement>('headerEl')
 
 /**
@@ -59,6 +75,8 @@ function publishHeight() {
 }
 
 onMounted(() => {
+  document.addEventListener('click', onDocClick)
+  document.addEventListener('keydown', onKey)
   window.addEventListener('scroll', onScroll, { passive: true })
   publishHeight()
   if (headerEl.value) {
@@ -68,6 +86,8 @@ onMounted(() => {
   window.addEventListener('resize', publishHeight)
 })
 onUnmounted(() => {
+  document.removeEventListener('click', onDocClick)
+  document.removeEventListener('keydown', onKey)
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('resize', publishHeight)
   ro?.disconnect()
@@ -104,15 +124,55 @@ onUnmounted(() => {
       </button>
 
       <nav class="ap-header__nav" :class="{ 'is-open': open }" @click="open = false">
-        <RouterLink
-          v-for="link in links"
-          :key="link.to"
-          :to="link.to"
-          class="ap-header__link"
-          :class="{ 'is-active': route.path === link.to }"
-        >
-          {{ link.label }}
-        </RouterLink>
+        <template v-for="link in links" :key="link.to">
+          <div
+            v-if="catalog && catalog.items.length && link.to === catalog.to"
+            ref="menuEl"
+            class="ap-header__menu"
+            :class="{ 'is-open': menuOpen }"
+            @click.stop
+          >
+            <span class="ap-header__menu-trigger">
+              <RouterLink :to="link.to" class="ap-header__link" :class="{ 'is-active': route.path === link.to }" @click="closeAll">
+                {{ link.label }}
+              </RouterLink>
+              <button
+                type="button"
+                class="ap-header__menu-toggle"
+                :aria-expanded="menuOpen"
+                :aria-label="link.label + ' categories'"
+                @click="menuOpen = !menuOpen"
+              >
+                <ChevronDown :size="14" :stroke-width="2" />
+              </button>
+            </span>
+            <div class="ap-header__panel" role="menu">
+              <div v-for="item in catalog.items" :key="item.to" class="ap-header__panel-col">
+                <RouterLink :to="item.to" class="ap-header__panel-head" role="menuitem" @click="closeAll">
+                  {{ item.label }}
+                </RouterLink>
+                <RouterLink
+                  v-for="sub in item.children ?? []"
+                  :key="sub.to"
+                  :to="sub.to"
+                  class="ap-header__panel-sub"
+                  role="menuitem"
+                  @click="closeAll"
+                >
+                  {{ sub.label }}
+                </RouterLink>
+              </div>
+            </div>
+          </div>
+          <RouterLink
+            v-else
+            :to="link.to"
+            class="ap-header__link"
+            :class="{ 'is-active': route.path === link.to }"
+          >
+            {{ link.label }}
+          </RouterLink>
+        </template>
         <RouterLink
           v-if="secondaryLabel && secondaryTo"
           :to="secondaryTo"
@@ -218,8 +278,75 @@ onUnmounted(() => {
 .ap-header__toggle span {
   display: block; height: 2px; background: var(--ap-ink); width: 22px; margin: 0 auto;
 }
+/* ── Catalog dropdown ───────────────────────────────────────
+   The menu is the ordinary link plus a chevron; the panel floats under the
+   row and lays categories out as columns with their subcategories beneath.
+   Hover opens it on pointer devices, the chevron toggles it elsewhere. */
+.ap-header__menu { position: relative; display: inline-flex; align-items: center; }
+.ap-header__menu-trigger { display: inline-flex; align-items: center; gap: 0.25rem; }
+.ap-header__menu-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.4rem; height: 1.4rem; padding: 0;
+  border: 0; background: transparent; color: inherit; cursor: pointer;
+  border-radius: 999px;
+  transition: transform 160ms ease, background 140ms ease;
+}
+.ap-header__menu-toggle:hover { background: color-mix(in srgb, var(--ap-ink) 8%, transparent); }
+.ap-header__menu.is-open .ap-header__menu-toggle { transform: rotate(180deg); }
+.ap-header__panel {
+  position: absolute; top: calc(100% + 0.9rem); left: 50%;
+  transform: translate(-50%, -6px);
+  display: flex; gap: 2rem;
+  min-width: max-content;
+  padding: 1.1rem 1.4rem 1.2rem;
+  background: var(--ap-surface);
+  color: var(--ap-ink);
+  border: 1px solid var(--ap-line);
+  border-radius: var(--ap-radius, 12px);
+  box-shadow: 0 18px 48px -20px color-mix(in srgb, var(--ap-ink) 35%, transparent);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms;
+  z-index: 30;
+}
+.ap-header__panel::before {
+  /* invisible bridge so the pointer can travel from the link to the panel */
+  content: ''; position: absolute; left: 0; right: 0; top: -1rem; height: 1rem;
+}
+.ap-header__menu.is-open .ap-header__panel {
+  opacity: 1; visibility: visible; pointer-events: auto; transform: translate(-50%, 0); transition-delay: 0s;
+}
+@media (hover: hover) {
+  .ap-header__menu:hover .ap-header__panel,
+  .ap-header__menu:focus-within .ap-header__panel {
+    opacity: 1; visibility: visible; pointer-events: auto; transform: translate(-50%, 0); transition-delay: 0s;
+  }
+}
+.ap-header__panel-col { display: flex; flex-direction: column; gap: 0.35rem; min-width: 8.5rem; }
+.ap-header__panel-head {
+  font-family: var(--ap-font-heading); font-weight: 600; font-size: 0.9rem;
+  letter-spacing: var(--ap-tracking-heading); text-transform: var(--ap-heading-transform);
+  color: var(--ap-ink); padding-bottom: 0.3rem; margin-bottom: 0.2rem;
+  border-bottom: 1px solid var(--ap-line);
+}
+.ap-header__panel-head:hover, .ap-header__panel-sub:hover { color: var(--ap-primary); }
+.ap-header__panel-sub { font-size: 0.88rem; color: var(--ap-ink-muted); }
+
 @media (max-width: 760px) {
   .ap-header__toggle { display: inline-flex; }
+  /* Mobile sheet: the catalog lists inline under its link, always expanded. */
+  .ap-header__menu { flex-direction: column; align-items: stretch; }
+  .ap-header__menu-trigger { justify-content: space-between; border-bottom: 1px solid var(--ap-line); }
+  .ap-header__menu-trigger .ap-header__link { border-bottom: 0; flex: 1; }
+  .ap-header__menu-toggle { display: none; }
+  .ap-header__panel {
+    position: static; transform: none; opacity: 1; visibility: visible; pointer-events: auto;
+    flex-direction: column; gap: 0.6rem;
+    padding: 0.6rem 0 0.8rem 1rem; border: 0; border-radius: 0; box-shadow: none;
+    border-bottom: 1px solid var(--ap-line);
+    background: transparent;
+  }
+  .ap-header__panel::before { display: none; }
+  .ap-header__panel-head { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
   .ap-header__nav {
     position: absolute; top: 100%; left: 0; right: 0;
     flex-direction: column; align-items: stretch; gap: 0;
