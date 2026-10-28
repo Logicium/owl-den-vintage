@@ -148,9 +148,12 @@ export const contentClient = {
 
   getAnalytics: (siteId: string, range: 7 | 30 | 90 = 30) => request<AnalyticsDTO>('GET', `/admin/sites/${siteId}/analytics?range=${range}`),
 
-  // --- Payments (owner-scoped: Stripe Connect + Plaid) ---
+  // --- Payments (owner-scoped: Stripe Connect or Square) ---
   getPaymentsStatus: () => request<PaymentsStatusDTO>('GET', '/admin/payments/status'),
   connectPayments: (returnTo?: string) => request<{ url: string }>('POST', '/admin/payments/connect', { returnTo }),
+  connectSquare: (returnTo?: string) => request<{ url: string }>('POST', '/admin/payments/square/connect', { returnTo }),
+  disconnectSquare: () => request<PaymentsStatusDTO>('POST', '/admin/payments/square/disconnect', {}),
+  setPaymentProvider: (provider: PaymentProvider) => request<PaymentsStatusDTO>('POST', '/admin/payments/provider', { provider }),
   createPlaidLinkToken: () => request<{ linkToken: string }>('POST', '/admin/payments/plaid/link-token'),
   exchangePlaidToken: (publicToken: string, accountId: string) =>
     request<{ ok: true; bank: { name: string; mask: string | null } }>('POST', '/admin/payments/plaid/exchange', { publicToken, accountId }),
@@ -539,14 +542,31 @@ export interface AnalyticsDTO {
   byHour: Array<{ hour: number; views: number }>
 }
 
+export type PaymentProvider = 'stripe' | 'square'
+
 export interface PaymentsStatusDTO {
+  /** Which connected provider storefront checkouts run through. */
+  provider: PaymentProvider
+  /** True when a checkout can be created for this owner right now. */
+  canCollect: boolean
   stripeConfigured: boolean
+  squareConfigured: boolean
   plaidConfigured: boolean
+  /* Stripe Connect */
   connected: boolean
   chargesEnabled: boolean
   payoutsEnabled: boolean
   detailsSubmitted: boolean
   bank: { name: string; mask: string | null } | null
+  /* Square (OAuth on the owner's own Square account) */
+  square: {
+    connected: boolean
+    merchantName: string | null
+    merchantId: string | null
+    locationId: string | null
+    expiresAt: string | null
+    needsReconnect: boolean
+  }
 }
 
 export interface BookingServiceDTO {
