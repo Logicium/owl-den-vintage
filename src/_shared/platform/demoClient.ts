@@ -159,6 +159,10 @@ function icsDataUrl(title: string, startIso: string, durationMinutes: number): s
 
 const latency = (ms = 350) => new Promise<void>(resolve => setTimeout(resolve, ms))
 
+/* Orders placed in this session, so the demo's /order/:id page has something to show. */
+const demoShopOrders = new Map<string, ShopOrderDTO>()
+const demoMealOrders = new Map<string, MealOrderDTO>()
+
 // ── The client ───────────────────────────────────────────────────────────
 
 export const demoClient = {
@@ -193,15 +197,28 @@ export const demoClient = {
     }).filter(i => i.quantity > 0)
     const subtotalCents = items.reduce((s, i) => s + i.lineTotalCents, 0)
     const shippingCents = payload.fulfillment === 'shipping' ? SHOP_SHIPPING_CENTS : 0
-    return {
+    const order: ShopOrderDTO = {
       id: demoId('order'),
       name: payload.name, email: payload.email, phone: payload.phone, notes: payload.notes,
       fulfillment: payload.fulfillment, shippingAddress: payload.shippingAddress,
       items, subtotalCents, shippingCents,
       totalCents: subtotalCents + shippingCents,
-      currency: 'USD', status: 'pending', createdAt: new Date().toISOString(),
+      currency: 'USD', status: 'paid', createdAt: new Date().toISOString(),
+      fulfillmentStatus: 'received', fulfillmentHistory: [],
+      pickupInstructions: 'Collect from the counter any day 10am to 6pm. Bring your order number.',
     }
+    demoShopOrders.set(order.id, order)
+    return order
   },
+
+  shopGetOrder: async (id: string): Promise<ShopOrderDTO> => {
+    await latency()
+    const o = demoShopOrders.get(id)
+    if (!o) throw new Error('Order not found')
+    return { ...o }
+  },
+
+  shopConfirmOrder: async (id: string): Promise<ShopOrderDTO> => demoClient.shopGetOrder(id),
 
   // --- Ticketing ---
   ticketingListEvents: async (_siteSlug: string): Promise<EventDTO[]> => {
@@ -285,14 +302,26 @@ export const demoClient = {
       }
     })
     const subtotalCents = items.reduce((s, i) => s + i.lineTotalCents, 0)
-    return {
+    const order: MealOrderDTO = {
       id: demoId('meal'),
       name: payload.name, email: payload.email, phone: payload.phone, notes: payload.notes,
       pickupAt: payload.pickupAt, items, subtotalCents,
       totalCents: subtotalCents, currency: 'USD',
       status: 'confirmed', paymentStatus: 'paid', createdAt: new Date().toISOString(),
+      pickupInstructions: 'Come to the counter and give your name.', timezone: DEMO_TZ,
     }
+    demoMealOrders.set(order.id, order)
+    return order
   },
+
+  orderingGetOrder: async (id: string): Promise<MealOrderDTO> => {
+    await latency()
+    const o = demoMealOrders.get(id)
+    if (!o) throw new Error('Order not found')
+    return { ...o }
+  },
+
+  orderingConfirmOrder: async (id: string): Promise<MealOrderDTO> => demoClient.orderingGetOrder(id),
 
   // --- Lodging ---
   lodgingAvailability: async (_siteSlug: string, checkIn: string, checkOut: string, partySize: number) => {

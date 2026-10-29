@@ -9,7 +9,9 @@ import {
 } from 'lucide-vue-next'
 import { useAdminAuthStore } from '../platform/adminAuthStore'
 import { useActiveSiteStore } from '../platform/activeSiteStore'
+import { contentClient } from '../platform/contentClient'
 import ToastHost from './components/ToastHost.vue'
+import { useToast } from './composables/useToast'
 import './admin.css'
 
 const auth = useAdminAuthStore()
@@ -23,6 +25,63 @@ onMounted(async () => {
 })
 
 watch(() => auth.owner?.id, async (id) => { if (id) await activeSites.refresh() })
+
+/* ── Site update notice ───────────────────────────────────────────────────
+   Content, photos and theme changes hydrate live, but new FEATURES ship as
+   template code and only reach a site when it is updated (nightly auto-update
+   or the button below). Owners could not tell the two apart: they flipped a
+   brand-new setting, saw nothing change, and assumed it was broken. So the
+   shell asks once per selected site whether the template has moved on and
+   says so plainly on every admin page. */
+const toast = useToast()
+const UPDATE_DISMISS_KEY = 'ap-admin-update-dismissed'
+const updateInfo = ref<{ siteId: string; hasUpdate: boolean; latest: string | null } | null>(null)
+const updateDismissed = ref(false)
+const updateQueued = ref(false)
+const updateBusy = ref(false)
+
+async function checkSiteUpdate(siteId: string) {
+  updateInfo.value = null
+  updateQueued.value = false
+  updateDismissed.value = false
+  try {
+    const s = await contentClient.getUpdateStatus(siteId)
+    updateInfo.value = { siteId, hasUpdate: s.hasUpdate, latest: s.latest }
+    try {
+      updateDismissed.value = sessionStorage.getItem(UPDATE_DISMISS_KEY) === `${siteId}:${s.latest ?? ''}`
+    } catch { /* storage unavailable: just show it */ }
+  } catch {
+    // The template lookup can fail (GitHub rate limit, offline); the Sites
+    // page keeps its manual "Check for updates" for that case.
+  }
+}
+
+watch(() => activeSites.activeSite?.id, (id) => { if (id && auth.owner) void checkSiteUpdate(id) }, { immediate: true })
+
+const showUpdateNotice = computed(() =>
+  !!auth.owner && !!updateInfo.value?.hasUpdate && !updateDismissed.value && route.name !== 'admin-login' && route.name !== 'admin-verify',
+)
+
+function dismissUpdateNotice() {
+  updateDismissed.value = true
+  try {
+    if (updateInfo.value) sessionStorage.setItem(UPDATE_DISMISS_KEY, `${updateInfo.value.siteId}:${updateInfo.value.latest ?? ''}`)
+  } catch { /* ignore */ }
+}
+
+async function applySiteUpdate() {
+  if (!updateInfo.value) return
+  updateBusy.value = true
+  try {
+    await contentClient.updateSite(updateInfo.value.siteId)
+    updateQueued.value = true
+    toast.success('Update queued. Your site rebuilds in the background and is usually live within a few minutes.')
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : String(e))
+  } finally {
+    updateBusy.value = false
+  }
+}
 
 interface NavItem { to: string; label: string; icon: Component; exact?: boolean; premium?: boolean }
 interface NavGroup { id: string; label: string; items: NavItem[] }
@@ -350,7 +409,29 @@ function initials(email?: string) {
               <RouterLink to="/admin/login" class="adm-btn adm-btn--primary">Sign in</RouterLink>
             </div>
           </div>
-          <RouterView v-else />
+          <template v-else>
+            <div v-if="showUpdateNotice" class="admin-update" role="status">
+              <div class="admin-update__body">
+                <template v-if="updateQueued">
+                  <strong>Site update queued.</strong>
+                  Your site is rebuilding now. New features show up once it finishes, usually within a few minutes.
+                </template>
+                <template v-else>
+                  <strong>A site update is waiting.</strong>
+                  Words, photos and theme changes go live in seconds, but new features (such as the catalog menu) only appear once your site is updated. It updates itself overnight, or you can apply it now.
+                </template>
+              </div>
+              <div class="admin-update__actions">
+                <button v-if="!updateQueued" type="button" class="adm-btn adm-btn--primary adm-btn--sm" :disabled="updateBusy" @click="applySiteUpdate">
+                  {{ updateBusy ? 'Queuing…' : 'Update site now' }}
+                </button>
+                <button type="button" class="adm-btn adm-btn--ghost adm-btn--sm" @click="dismissUpdateNotice">
+                  {{ updateQueued ? 'Dismiss' : 'Later' }}
+                </button>
+              </div>
+            </div>
+            <RouterView />
+          </template>
         </div>
       </main>
     </div>
@@ -359,6 +440,18 @@ function initials(email?: string) {
 </template>
 
 <style scoped>
+.admin-update {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  margin: 0 0 1.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--adm-accent) 45%, transparent);
+  border-radius: var(--adm-radius, 12px);
+  background: color-mix(in srgb, var(--adm-accent) 10%, var(--adm-surface));
+  color: var(--adm-text);
+  font-size: 0.9rem; line-height: 1.45;
+}
+.admin-update__body strong { margin-right: 0.35rem; }
+.admin-update__actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
 /* The dashboard is a fullscreen overlay above the public site: it blooms in
    on entry and settles out when closed. */
 .admin-shell {

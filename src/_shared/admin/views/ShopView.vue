@@ -1,6 +1,7 @@
 ﻿<script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { contentClient, type ShopConfigDTO, type ShopProductDTO, type ShopProductInput, type ShopOrderDTO } from '../../platform/contentClient'
+import FulfillmentPanel from '../components/FulfillmentPanel.vue'
 import { useActiveSiteStore } from '../../platform/activeSiteStore'
 import MoneyInput from '../components/inputs/MoneyInput.vue'
 import NumberInput from '../components/inputs/NumberInput.vue'
@@ -214,15 +215,16 @@ async function toggleAddOn() {
   }
 }
 
-async function setOrderStatus(o: ShopOrderDTO, status: ShopOrderDTO['status']) {
-  if (!siteId.value) return
-  try {
-    const updated = await contentClient.shopUpdateOrder(siteId.value, o.id, status)
-    const i = orders.value.findIndex(x => x.id === o.id)
-    if (i >= 0) orders.value[i] = updated
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : String(e)
-  }
+/** The fulfillment panel does the saving; the list just takes the fresh row. */
+function replaceOrder(updated: ShopOrderDTO) {
+  const i = orders.value.findIndex(x => x.id === updated.id)
+  if (i >= 0) orders.value[i] = updated
+}
+
+function addressLines(o: ShopOrderDTO): string[] {
+  const a = o.shippingAddress
+  if (!a) return []
+  return [a.line1, a.line2, [a.city, a.region].filter(Boolean).join(', ') + ' ' + a.postalCode, a.country].filter((x): x is string => !!x && x.trim() !== '')
 }
 
 function toggleFulfillment(method: 'pickup' | 'shipping') {
@@ -366,33 +368,37 @@ watch(siteId, loadAndSync)
       <section class="adm-card">
         <h2 class="adm-h2">Orders</h2>
         <p v-if="!orders.length" class="adm-muted">No orders yet.</p>
-        <table v-else class="adm-table">
-          <thead>
-            <tr><th>Placed</th><th>Customer</th><th>Items</th><th>Fulfillment</th><th>Total</th><th>Status</th><th /></tr>
-          </thead>
-          <tbody>
-            <tr v-for="o in orders" :key="o.id">
-              <td>{{ new Date(o.createdAt).toLocaleString() }}</td>
-              <td>
-                {{ o.name }}<br />
+        <div v-else class="orders">
+          <article v-for="o in orders" :key="o.id" class="order-card">
+            <header class="order-card__head">
+              <div class="order-card__who">
+                <strong>{{ o.name }}</strong>
                 <small><a :href="`mailto:${o.email}`">{{ o.email }}</a><template v-if="o.phone"> · {{ o.phone }}</template></small>
-              </td>
-              <td>
-                <div v-for="it in o.items" :key="it.productId">{{ it.name }} × {{ it.quantity }}</div>
-              </td>
-              <td>{{ o.fulfillment }}</td>
-              <td>{{ money(o.totalCents, o.currency) }}</td>
-              <td>
+              </div>
+              <div class="order-card__meta">
+                <span class="order-card__when">{{ new Date(o.createdAt).toLocaleString() }}</span>
                 <span class="adm-badge" :class="o.status === 'cancelled' ? 'adm-badge--warn' : (o.status === 'fulfilled' ? 'adm-badge--ok' : 'adm-badge--info')">{{ o.status }}</span>
-              </td>
-              <td class="order-actions">
-                <button v-if="o.status === 'pending'" type="button" class="adm-btn adm-btn--ghost adm-btn--sm" @click="setOrderStatus(o, 'paid')">Mark paid</button>
-                <button v-if="o.status === 'paid'" type="button" class="adm-btn adm-btn--ghost adm-btn--sm" @click="setOrderStatus(o, 'fulfilled')">Fulfill</button>
-                <button v-if="o.status !== 'cancelled' && o.status !== 'fulfilled'" type="button" class="adm-btn adm-btn--ghost adm-btn--sm" @click="setOrderStatus(o, 'cancelled')">Cancel</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </header>
+            <div class="order-card__body">
+              <ul class="order-card__items">
+                <li v-for="it in o.items" :key="it.productId">{{ it.name }} <span>× {{ it.quantity }}</span></li>
+              </ul>
+              <div class="order-card__ship">
+                <template v-if="o.fulfillment === 'shipping'">
+                  <span class="order-card__label">Ship to</span>
+                  <div v-for="(line, i) in addressLines(o)" :key="i">{{ line }}</div>
+                </template>
+                <template v-else>
+                  <span class="order-card__label">Local pickup</span>
+                </template>
+                <p v-if="o.notes" class="order-card__note">“{{ o.notes }}”</p>
+              </div>
+              <div class="order-card__total">{{ money(o.totalCents, o.currency) }}</div>
+            </div>
+            <FulfillmentPanel :order="o" :site-id="siteId" @updated="replaceOrder" />
+          </article>
+        </div>
       </section>
     </template>
   </section>
@@ -424,5 +430,20 @@ watch(siteId, loadAndSync)
 .adm-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .adm-table th, .adm-table td { text-align: left; padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--adm-border); vertical-align: top; }
 .adm-table th { color: var(--adm-text-subtle); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
-.order-actions { display: flex; flex-direction: column; gap: 0.25rem; }
+/* Orders as cards: each one carries its own fulfillment tracker. */
+.orders { display: grid; gap: 0.9rem; }
+.order-card { padding: 0.95rem 1.1rem 1rem; border: 1px solid var(--adm-border); border-radius: var(--adm-radius); background: var(--adm-surface-2); }
+.order-card__head { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start; margin-bottom: 0.7rem; }
+.order-card__who { display: grid; gap: 0.1rem; }
+.order-card__who small { color: var(--adm-text-muted); }
+.order-card__meta { display: flex; align-items: center; gap: 0.6rem; }
+.order-card__when { font-size: 0.8rem; color: var(--adm-text-muted); }
+.order-card__body { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto; gap: 1rem; align-items: start; font-size: 0.88rem; padding-bottom: 0.85rem; }
+@media (max-width: 720px) { .order-card__body { grid-template-columns: 1fr; } }
+.order-card__items { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.2rem; }
+.order-card__items span { color: var(--adm-text-muted); }
+.order-card__ship { color: var(--adm-text); line-height: 1.4; }
+.order-card__label { display: block; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--adm-text-muted); margin-bottom: 0.2rem; }
+.order-card__note { margin: 0.5rem 0 0; color: var(--adm-text-muted); font-style: italic; }
+.order-card__total { font-weight: 700; font-size: 1rem; white-space: nowrap; }
 </style>

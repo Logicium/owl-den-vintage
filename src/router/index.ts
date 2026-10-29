@@ -11,6 +11,8 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: () => import('../views/HomeView.vue') },
     { path: '/shop', name: 'shop', component: () => import('../views/ShopView.vue') },
+    { path: '/checkout', name: 'checkout', component: () => import('../views/CheckoutView.vue') },
+    { path: '/order/:id', name: 'order', component: () => import('../views/OrderView.vue'), props: true },
     { path: '/visit', name: 'visit', component: () => import('../views/VisitView.vue') },
     // Always registered; the guard keeps it paid-only. Omitting the route
     // here would strand upgraded sites, whose variant only arrives after

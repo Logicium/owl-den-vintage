@@ -69,7 +69,11 @@ interface SiteContent {
 
 function blankContent(): SiteContent {
   return {
-    brand: '', tagline: '', blurb: '', favicon: '', theme: 'atlas', swatch: 'onyx-light', variant: 'essentials',
+    // Theme, swatch and variant stay EMPTY until the site's own payload supplies
+    // them: the theme picker owns these, and many sites run on the template's
+    // build-time theme with no `theme` key published at all. Writing defaults
+    // here silently re-themed such sites to Atlas on their first content save.
+    brand: '', tagline: '', blurb: '', favicon: '', theme: '', swatch: '', variant: '',
     contact: { address: '', phone: '', email: '', mapEmbedUrl: '' },
     hours: [{ day: '', open: '' }],
     photos: { hero: { src: '', alt: '' }, about: { src: '', alt: '' }, gallery: [] },
@@ -327,6 +331,10 @@ function payloadForSave(): Record<string, unknown> {
   const keep = new Set(ARCHETYPE_KEYS[(archetype.value || '').toLowerCase()] ?? ALL_ARCHETYPE_KEYS)
   for (const k of ALL_ARCHETYPE_KEYS) {
     if (!keep.has(k)) delete payload[k]
+  }
+  // Never invent a look the owner did not publish (see blankContent).
+  for (const k of ['theme', 'swatch', 'variant']) {
+    if (payload[k] === '' || payload[k] === undefined) delete payload[k]
   }
   // Templates key events by id — derive one from the title when absent.
   if (Array.isArray(payload.events)) {
@@ -935,7 +943,7 @@ function stringFields(obj: Record<string, unknown>): Array<[string, string]> {
         <button type="button" class="btn-add" @click="addProduct">+ Add product</button>
 
         <p class="section-sub">Shop navigation</p>
-        <SegmentedInput v-model="c.navMenu" :options="NAV_MENU_OPTIONS" hint="The catalog menu lists every category below, with its subcategories, under Shop in the header." />
+        <SegmentedInput v-model="c.navMenu" :options="NAV_MENU_OPTIONS" hint="The catalog menu lists every category below, with its subcategories, under Shop in the header. Like every setting here it goes live in seconds, as long as your site is on the latest version (a notice at the top of this page tells you when it is not)." />
 
         <p class="section-sub">Shop categories <span class="hint">each can hold subcategories</span></p>
         <div v-for="(cat, i) in c.categories" :key="i" class="testimonial-row">

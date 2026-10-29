@@ -388,6 +388,8 @@ export const contentClient = {
     fulfillment: 'pickup' | 'shipping'
     shippingAddress?: ShippingAddressDTO
     items: Array<{ productId: string; quantity: number }>
+    /** "/order" sends the buyer to the order status page after paying. */
+    returnPath?: string
   }) => request<{ orderId: string; checkoutUrl: string | null; order: ShopOrderDTO }>('POST', '/shop/checkout', payload),
   shopConfirmOrder: (id: string) => request<ShopOrderDTO>('POST', `/shop/orders/${id}/confirm`),
   shopGetOrder: (id: string) => request<ShopOrderDTO>('GET', `/shop/orders/${id}`),
@@ -403,6 +405,9 @@ export const contentClient = {
     request<ShopOrderDTO[]>('GET', `/admin/sites/${siteId}/shop-orders`),
   shopUpdateOrder: (siteId: string, orderId: string, status: ShopOrderDTO['status']) =>
     request<ShopOrderDTO>('PATCH', `/admin/sites/${siteId}/shop-orders/${orderId}`, { status }),
+  /** Advance the fulfillment tracker one step; emails the customer unless `notify` is false. */
+  shopUpdateFulfillment: (siteId: string, orderId: string, input: ShopFulfillmentInput) =>
+    request<ShopOrderDTO>('PATCH', `/admin/sites/${siteId}/shop-orders/${orderId}/fulfillment`, input),
   getShopConfig: (siteId: string) =>
     request<{ override: ShopConfigDTO | null; resolved: Required<ShopConfigDTO> }>(
       'GET', `/admin/sites/${siteId}/shop-config`,
@@ -672,6 +677,18 @@ export interface ShopOrderItemDTO {
   lineTotalCents: number
 }
 
+/** Owner-advanced progress. Shipping: received → label_printed → shipped → delivered. Pickup: received → ready_for_pickup → picked_up. */
+export type ShopFulfillmentStatus = 'received' | 'label_printed' | 'shipped' | 'delivered' | 'ready_for_pickup' | 'picked_up'
+
+export interface ShopFulfillmentInput {
+  status: ShopFulfillmentStatus
+  trackingNumber?: string
+  trackingCarrier?: string
+  trackingUrl?: string
+  note?: string
+  notify?: boolean
+}
+
 export interface ShopOrderDTO {
   id: string
   name: string
@@ -687,6 +704,16 @@ export interface ShopOrderDTO {
   currency: string
   status: 'pending' | 'paid' | 'fulfilled' | 'cancelled'
   createdAt: string
+  /* Fulfillment tracker */
+  fulfillmentStatus: ShopFulfillmentStatus
+  trackingNumber?: string | null
+  trackingCarrier?: string | null
+  trackingUrl?: string | null
+  fulfillmentNote?: string | null
+  fulfillmentHistory?: Array<{ status: ShopFulfillmentStatus; at: string; note?: string }>
+  fulfillmentUpdatedAt?: string | null
+  /** Public order lookups carry the shop's pickup instructions for the order page. */
+  pickupInstructions?: string | null
 }
 
 export interface ShopConfigDTO {
@@ -752,6 +779,9 @@ export interface MealOrderDTO {
   posSyncedAt?: string | null
   /** Last POS push failure, shown in the dashboard with a resend button. */
   posSyncError?: string | null
+  /** Public order lookups carry these for the order page. */
+  pickupInstructions?: string | null
+  timezone?: string
 }
 
 export interface PosConfigDTO {
