@@ -6,6 +6,7 @@ import { useActiveSiteStore } from '../../platform/activeSiteStore'
 import MoneyInput from '../components/inputs/MoneyInput.vue'
 import NumberInput from '../components/inputs/NumberInput.vue'
 import ToggleInput from '../components/inputs/ToggleInput.vue'
+import SegmentedInput from '../components/inputs/SegmentedInput.vue'
 import PosPanel from '../components/PosPanel.vue'
 import { useToast } from '../composables/useToast'
 import SelectInput from '../components/inputs/SelectInput.vue'
@@ -213,6 +214,25 @@ function parseHoursEditor(): Record<number, string[]> {
   return out
 }
 
+/* Pickup only, delivery only, or both: one choice instead of two toggles
+   that could both end up off. */
+const FULFILLMENT_MODES = [
+  { value: 'pickup', label: 'Pickup only' },
+  { value: 'delivery', label: 'Delivery only' },
+  { value: 'both', label: 'Pickup and delivery' },
+]
+const fulfillmentMode = computed({
+  get: () => {
+    const f = resolved.value?.fulfillment ?? ['pickup']
+    return f.includes('pickup') && f.includes('delivery') ? 'both' : (f.includes('delivery') ? 'delivery' : 'pickup')
+  },
+  set: (mode: string) => {
+    if (!resolved.value) return
+    resolved.value.fulfillment = mode === 'both' ? ['pickup', 'delivery'] : (mode === 'delivery' ? ['delivery'] : ['pickup'])
+  },
+})
+const deliveryOn = computed(() => (resolved.value?.fulfillment ?? ['pickup']).includes('delivery'))
+
 async function saveConfig() {
   if (!siteId.value || !resolved.value) return
   saving.value = true
@@ -229,6 +249,11 @@ async function saveConfig() {
       pickupInstructions: resolved.value.pickupInstructions,
       notifyEmail: notifyEmails.value.join(', ') || undefined,
       collectPayment: resolved.value.collectPayment !== false,
+      fulfillment: resolved.value.fulfillment?.length ? resolved.value.fulfillment : ['pickup'],
+      deliveryFeeCents: Math.max(0, Math.round(resolved.value.deliveryFeeCents ?? 0)),
+      deliveryMinimumCents: Math.max(0, Math.round(resolved.value.deliveryMinimumCents ?? 0)),
+      deliveryArea: resolved.value.deliveryArea || undefined,
+      deliveryInstructions: resolved.value.deliveryInstructions || undefined,
     }
     const next = await contentClient.saveOrderingConfig(siteId.value, payload)
     resolved.value = next.resolved
@@ -390,6 +415,21 @@ watch(siteId, loadAndSync)
           <NumberInput v-model="resolved.maxOrdersPerSlot" label="Max orders per slot" :min="1" unit="orders" />
           <NumberInput v-model="resolved.windowDays" label="Window forward" :min="1" :max="60" unit="days" />
           <div class="adm-field adm-field--full">
+            <SegmentedInput v-model="fulfillmentMode" label="How orders are handed over" :options="FULFILLMENT_MODES" hint="Pickup orders are collected at the counter. Delivery orders take an address at checkout and go to your driver." />
+          </div>
+          <template v-if="deliveryOn">
+            <MoneyInput v-model="resolved.deliveryFeeCents" label="Delivery fee" :currency="resolved.currency || 'USD'" />
+            <MoneyInput v-model="resolved.deliveryMinimumCents" label="Delivery minimum" :currency="resolved.currency || 'USD'" />
+            <label class="adm-field adm-field--full">
+              <span>Delivery area (shown at checkout)</span>
+              <input class="adm-input" v-model="resolved.deliveryArea" placeholder="Within Trinidad city limits" maxlength="200" />
+            </label>
+            <label class="adm-field adm-field--full">
+              <span>Delivery instructions (shown after delivery orders and in the on-its-way email)</span>
+              <textarea class="adm-input" rows="2" v-model="resolved.deliveryInstructions" />
+            </label>
+          </template>
+          <div class="adm-field adm-field--full">
             <ToggleInput
               :model-value="resolved.collectPayment !== false"
               label="Take payment online"
@@ -458,11 +498,18 @@ watch(siteId, loadAndSync)
         <p v-if="!orders.length" class="adm-muted">No orders yet.</p>
         <table v-else class="adm-table">
           <thead>
-            <tr><th>Pickup</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Ticket</th><th /></tr>
+            <tr><th>When</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Ticket</th><th /></tr>
           </thead>
           <tbody>
             <tr v-for="o in orders" :key="o.id">
-              <td>{{ pickupLocal(o.pickupAt) }}</td>
+              <td>
+                {{ pickupLocal(o.pickupAt) }}
+                <template v-if="o.fulfillment === 'delivery' && o.deliveryAddress">
+                  <br /><span class="adm-badge adm-badge--info">Delivery</span>
+                  <small class="ord-address">{{ o.deliveryAddress.line1 }}<template v-if="o.deliveryAddress.line2">, {{ o.deliveryAddress.line2 }}</template>, {{ o.deliveryAddress.city }} {{ o.deliveryAddress.postalCode }}</small>
+                </template>
+                <template v-else><br /><small class="adm-muted">Pickup</small></template>
+              </td>
               <td>
                 {{ o.name }}<br />
                 <small><a :href="`mailto:${o.email}`">{{ o.email }}</a><template v-if="o.phone"> · {{ o.phone }}</template></small>
@@ -476,7 +523,7 @@ watch(siteId, loadAndSync)
                 {{ money(o.totalCents, o.currency) }}<br />
                 <span v-if="o.paymentStatus === 'paid'" class="adm-badge adm-badge--ok">Paid</span>
                 <span v-else-if="o.paymentStatus === 'awaiting'" class="adm-badge adm-badge--warn">Awaiting payment</span>
-                <span v-else class="adm-badge">Pay at pickup</span>
+                <span v-else class="adm-badge">{{ o.fulfillment === 'delivery' ? 'Pay on delivery' : 'Pay at pickup' }}</span>
               </td>
               <td>
                 <span class="adm-badge" :class="o.status === 'cancelled' ? 'adm-badge--warn' : (o.status === 'completed' ? 'adm-badge--ok' : 'adm-badge--info')">{{ o.status }}</span>
@@ -585,4 +632,5 @@ watch(siteId, loadAndSync)
 .ord-import { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin: 0.4rem 0 0.9rem; }
 .ord-import__hint { font-size: 0.78rem; }
 .ord-import__status { margin: 0; }
+.ord-address { display: block; margin-top: 0.2rem; color: var(--adm-text-muted); }
 </style>

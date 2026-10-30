@@ -7,6 +7,7 @@ import MoneyInput from '../components/inputs/MoneyInput.vue'
 import NumberInput from '../components/inputs/NumberInput.vue'
 import ToggleInput from '../components/inputs/ToggleInput.vue'
 import SelectInput from '../components/inputs/SelectInput.vue'
+import SegmentedInput from '../components/inputs/SegmentedInput.vue'
 import ImageInput from '../components/inputs/ImageInput.vue'
 
 const CURRENCY_OPTIONS = ['USD', 'CAD', 'EUR', 'GBP', 'MXN'].map(c => ({ value: c, label: c }))
@@ -227,13 +228,22 @@ function addressLines(o: ShopOrderDTO): string[] {
   return [a.line1, a.line2, [a.city, a.region].filter(Boolean).join(', ') + ' ' + a.postalCode, a.country].filter((x): x is string => !!x && x.trim() !== '')
 }
 
-function toggleFulfillment(method: 'pickup' | 'shipping') {
-  if (!resolved.value) return
-  const list = resolved.value.fulfillment.includes(method)
-    ? resolved.value.fulfillment.filter(f => f !== method)
-    : [...resolved.value.fulfillment, method]
-  resolved.value.fulfillment = list.length ? list : ['pickup']
-}
+/* Pickup only, shipping only, or both: one choice instead of two toggles. */
+const FULFILLMENT_MODES = [
+  { value: 'pickup', label: 'Pickup only' },
+  { value: 'shipping', label: 'Shipping only' },
+  { value: 'both', label: 'Pickup and shipping' },
+]
+const fulfillmentMode = computed({
+  get: () => {
+    const f = resolved.value?.fulfillment ?? ['pickup']
+    return f.includes('pickup') && f.includes('shipping') ? 'both' : (f.includes('shipping') ? 'shipping' : 'pickup')
+  },
+  set: (mode: string) => {
+    if (!resolved.value) return
+    resolved.value.fulfillment = mode === 'both' ? ['pickup', 'shipping'] : (mode === 'shipping' ? ['shipping'] : ['pickup'])
+  },
+})
 
 function money(cents?: number, currency?: string) {
   if (cents == null) return ''
@@ -341,11 +351,7 @@ watch(siteId, loadAndSync)
           <SelectInput v-model="resolved.currency" label="Currency" :options="CURRENCY_OPTIONS" />
           <MoneyInput v-model="resolved.shippingFlatCents" label="Shipping flat rate" :currency="resolved.currency || 'USD'" />
           <div class="adm-field adm-field--full">
-            <span>Fulfillment offered</span>
-            <div class="fulfill-toggles">
-              <ToggleInput :model-value="resolved.fulfillment.includes('pickup')" label="Local pickup" @update:model-value="() => toggleFulfillment('pickup')" />
-              <ToggleInput :model-value="resolved.fulfillment.includes('shipping')" label="Ship to customer" @update:model-value="() => toggleFulfillment('shipping')" />
-            </div>
+            <SegmentedInput v-model="fulfillmentMode" label="How orders are handed over" :options="FULFILLMENT_MODES" hint="Pickup orders are collected in store. Shipping orders take an address at checkout and add the flat rate above." />
           </div>
           <label class="adm-field adm-field--full">
             <span>Pickup instructions (shown after pickup orders)</span>

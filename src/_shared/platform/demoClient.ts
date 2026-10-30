@@ -273,6 +273,11 @@ export const demoClient = {
       currency: 'USD',
       categories: ['Starters', 'Mains', 'Desserts', 'Drinks'],
       items: demoMenu.map(m => ({ ...m, currency: 'USD' })),
+      fulfillment: ['pickup', 'delivery'] as Array<'pickup' | 'delivery'>,
+      deliveryFeeCents: 400,
+      deliveryMinimumCents: 1500,
+      deliveryArea: 'Within Trinidad city limits',
+      deliveryInstructions: 'The driver will text when they are a few minutes out.',
     }
   },
 
@@ -290,6 +295,8 @@ export const demoClient = {
     siteSlug: string; name: string; email: string; phone?: string; notes?: string
     pickupAt: string
     items: Array<{ menuItemId: string; quantity: number; notes?: string }>
+    fulfillment?: 'pickup' | 'delivery'
+    deliveryAddress?: { line1: string; line2?: string; city: string; region?: string; postalCode: string }
   }): Promise<MealOrderDTO> => {
     await latency(600)
     const items = payload.items.map(i => {
@@ -302,13 +309,20 @@ export const demoClient = {
       }
     })
     const subtotalCents = items.reduce((s, i) => s + i.lineTotalCents, 0)
+    const delivery = payload.fulfillment === 'delivery'
+    const deliveryFeeCents = delivery ? 400 : 0
     const order: MealOrderDTO = {
       id: demoId('meal'),
       name: payload.name, email: payload.email, phone: payload.phone, notes: payload.notes,
       pickupAt: payload.pickupAt, items, subtotalCents,
-      totalCents: subtotalCents, currency: 'USD',
+      fulfillment: delivery ? 'delivery' : 'pickup',
+      deliveryAddress: delivery ? payload.deliveryAddress : null,
+      deliveryFeeCents,
+      totalCents: subtotalCents + deliveryFeeCents, currency: 'USD',
       status: 'confirmed', paymentStatus: 'paid', createdAt: new Date().toISOString(),
-      pickupInstructions: 'Come to the counter and give your name.', timezone: DEMO_TZ,
+      pickupInstructions: 'Come to the counter and give your name.',
+      deliveryInstructions: 'The driver will text when they are a few minutes out.',
+      timezone: DEMO_TZ,
     }
     demoMealOrders.set(order.id, order)
     return order

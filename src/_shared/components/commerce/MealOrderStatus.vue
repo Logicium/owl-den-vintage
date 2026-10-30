@@ -27,15 +27,24 @@ const confirming = ref(false)
 
 const money = (cents: number) => formatMoney(cents, order.value?.currency ?? 'USD')
 
+const isDelivery = computed(() => order.value?.fulfillment === 'delivery')
+
 const steps = computed<TimelineStep[]>(() => {
   const o = order.value
   if (!o) return []
-  return [
-    { key: 'pending', label: 'Order received', at: o.createdAt },
-    { key: 'confirmed', label: 'Kitchen confirmed' },
-    { key: 'ready', label: 'Ready for pickup', hint: o.pickupInstructions || undefined },
-    { key: 'completed', label: 'Picked up' },
-  ]
+  return isDelivery.value
+    ? [
+      { key: 'pending', label: 'Order received', at: o.createdAt },
+      { key: 'confirmed', label: 'Kitchen confirmed' },
+      { key: 'ready', label: 'On its way', hint: o.deliveryInstructions || undefined },
+      { key: 'completed', label: 'Delivered' },
+    ]
+    : [
+      { key: 'pending', label: 'Order received', at: o.createdAt },
+      { key: 'confirmed', label: 'Kitchen confirmed' },
+      { key: 'ready', label: 'Ready for pickup', hint: o.pickupInstructions || undefined },
+      { key: 'completed', label: 'Picked up' },
+    ]
 })
 
 const cancelled = computed(() => order.value?.status === 'cancelled')
@@ -96,12 +105,13 @@ onMounted(load)
           <h1 id="ap-order-title">
             <template v-if="cancelled">This order was cancelled.</template>
             <template v-else-if="awaitingPayment">Almost there{{ firstName ? ', ' + firstName : '' }}.</template>
+            <template v-else-if="isDelivery">Thanks{{ firstName ? ', ' + firstName : '' }}. Arriving around <span class="ap-order__time">{{ pickupLabel(order.pickupAt) }}</span>.</template>
             <template v-else>Thanks{{ firstName ? ', ' + firstName : '' }}. See you at <span class="ap-order__time">{{ pickupLabel(order.pickupAt) }}</span>.</template>
           </h1>
           <p class="ap-order__lede">
             <template v-if="cancelled">If you paid online, the refund is on its way back to your card.</template>
             <template v-else-if="awaitingPayment">We are waiting on the payment confirmation. This page updates on its own once it lands.</template>
-            <template v-else>We emailed a copy to <strong>{{ order.email }}</strong> and will write again when the kitchen confirms and when it is ready.</template>
+            <template v-else>We emailed a copy to <strong>{{ order.email }}</strong> and will write again when the kitchen confirms and when it is {{ isDelivery ? 'on its way' : 'ready' }}.</template>
           </p>
         </header>
 
@@ -123,20 +133,30 @@ onMounted(load)
               </li>
             </ul>
             <dl class="ap-order__totals">
+              <template v-if="isDelivery">
+                <div><dt>Subtotal</dt><dd>{{ money(order.subtotalCents) }}</dd></div>
+                <div><dt>Delivery</dt><dd>{{ order.deliveryFeeCents ? money(order.deliveryFeeCents) : 'Free' }}</dd></div>
+              </template>
               <div class="ap-order__grand"><dt>Total</dt><dd>{{ money(order.totalCents) }}</dd></div>
             </dl>
             <p class="ap-order__pay">
               <template v-if="cancelled">Cancelled</template>
               <template v-else-if="order.paymentStatus === 'paid'">Paid online</template>
               <template v-else-if="order.paymentStatus === 'awaiting'">Payment pending</template>
+              <template v-else-if="isDelivery">Pay on delivery</template>
               <template v-else>Pay at pickup</template>
             </p>
           </article>
 
           <article class="ap-order__card">
-            <h2>Pickup</h2>
+            <h2>{{ isDelivery ? 'Delivery' : 'Pickup' }}</h2>
             <p class="ap-order__when">{{ pickupLabel(order.pickupAt) }}</p>
-            <p class="ap-order__pickup">{{ order.pickupInstructions || 'Come to the counter and give your name.' }}</p>
+            <address v-if="isDelivery && order.deliveryAddress" class="ap-order__address">
+              {{ order.deliveryAddress.line1 }}<br />
+              <template v-if="order.deliveryAddress.line2">{{ order.deliveryAddress.line2 }}<br /></template>
+              {{ order.deliveryAddress.city }}<template v-if="order.deliveryAddress.region">, {{ order.deliveryAddress.region }}</template> {{ order.deliveryAddress.postalCode }}
+            </address>
+            <p class="ap-order__pickup">{{ isDelivery ? (order.deliveryInstructions || 'We will email you when it leaves the kitchen.') : (order.pickupInstructions || 'Come to the counter and give your name.') }}</p>
             <p v-if="order.notes" class="ap-order__yournote"><span>Your note</span>{{ order.notes }}</p>
           </article>
         </div>
@@ -168,9 +188,11 @@ onMounted(load)
 .ap-order__lines li { display: flex; justify-content: space-between; gap: 1rem; }
 .ap-order__qty { color: var(--ap-ink-muted); }
 .ap-order__linenote { display: block; font-size: 0.82rem; color: var(--ap-ink-muted); }
-.ap-order__totals { margin: 1rem 0 0; padding-top: 0.9rem; border-top: 1px solid var(--ap-line); display: grid; gap: 0.35rem; }
+.ap-order__totals { margin: 1rem 0 0; padding-top: 0.9rem; border-top: 1px solid var(--ap-line); display: grid; gap: 0.35rem; font-size: 0.9rem; }
 .ap-order__totals div { display: flex; justify-content: space-between; gap: 1rem; }
+.ap-order__totals dt { color: var(--ap-ink-muted); }
 .ap-order__totals dd { margin: 0; }
+.ap-order__address { font-style: normal; line-height: 1.55; font-size: 0.93rem; margin: 0 0 0.6rem; }
 .ap-order__grand { font-size: 1rem; }
 .ap-order__grand dt { font-weight: 600; }
 .ap-order__grand dd { font-weight: 700; }

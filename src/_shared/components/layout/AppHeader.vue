@@ -23,6 +23,8 @@ defineProps<{
    * Desktop opens on hover or click; the mobile sheet lists it inline.
    */
   catalog?: { to: string; items: CatalogMenuItem[] }
+  /** Small pill beside the brand (e.g. "Beta"); links to `to` when given. */
+  badge?: { label: string; to?: string; title?: string }
 }>()
 
 const route = useRoute()
@@ -113,6 +115,8 @@ onUnmounted(() => {
           <span v-if="tagline" class="ap-header__brand-tag">{{ tagline }}</span>
         </span>
       </RouterLink>
+      <RouterLink v-if="badge && badge.to" :to="badge.to" class="ap-header__badge" :title="badge.title" @click="open = false">{{ badge.label }}</RouterLink>
+      <span v-else-if="badge" class="ap-header__badge" :title="badge.title">{{ badge.label }}</span>
 
       <button
         class="ap-header__toggle"
@@ -246,6 +250,20 @@ onUnmounted(() => {
   text-transform: uppercase; color: var(--ap-ink-muted);
   margin-top: 0.35rem;
 }
+/* Status pill tucked against the brand ("Beta"). */
+.ap-header__badge {
+  margin-left: -0.75rem; flex: none;
+  padding: 0.22rem 0.55rem; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ap-primary) 55%, transparent);
+  background: color-mix(in srgb, var(--ap-primary) 12%, transparent);
+  color: var(--ap-primary);
+  font-family: var(--ap-font-mono, monospace); font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; line-height: 1;
+  border-bottom-width: 1px;
+  transition: background 140ms ease, color 140ms ease;
+}
+a.ap-header__badge:hover { background: var(--ap-primary); color: var(--ap-surface); }
+.ap-header.is-light .ap-header__badge { color: #fff; border-color: rgba(255,255,255,0.55); background: rgba(255,255,255,0.14); }
 .ap-header__nav {
   display: flex; align-items: center; gap: 1.75rem;
 }

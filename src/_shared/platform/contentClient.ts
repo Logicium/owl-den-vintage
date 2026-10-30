@@ -423,6 +423,12 @@ export const contentClient = {
       currency: string
       categories: string[]
       items: MenuItemDTO[]
+      /* Handover options; optional so older services still parse. */
+      fulfillment?: Array<'pickup' | 'delivery'>
+      deliveryFeeCents?: number
+      deliveryMinimumCents?: number
+      deliveryArea?: string
+      deliveryInstructions?: string
     }>('GET', `/ordering/menu?siteSlug=${encodeURIComponent(siteSlug)}`),
   orderingSlots: (siteSlug: string) =>
     request<{
@@ -439,6 +445,8 @@ export const contentClient = {
     notes?: string
     pickupAt: string
     items: Array<{ menuItemId: string; quantity: number; notes?: string }>
+    fulfillment?: 'pickup' | 'delivery'
+    deliveryAddress?: DeliveryAddressDTO
   }) => request<MealOrderDTO>('POST', '/ordering/orders', payload),
   /** Pending order + Stripe Checkout (destination charge to the owner); `checkoutUrl` null = pay at pickup. */
   orderingCheckout: (payload: {
@@ -449,6 +457,8 @@ export const contentClient = {
     notes?: string
     pickupAt: string
     items: Array<{ menuItemId: string; quantity: number; notes?: string }>
+    fulfillment?: 'pickup' | 'delivery'
+    deliveryAddress?: DeliveryAddressDTO
     /** Same-site path Stripe returns the customer to, e.g. "/menu". */
     returnPath?: string
   }) => request<{ orderId: string; checkoutUrl: string | null; order: MealOrderDTO }>('POST', '/ordering/checkout', payload),
@@ -759,13 +769,26 @@ export interface MealOrderLineDTO {
   notes?: string
 }
 
+export interface DeliveryAddressDTO {
+  line1: string
+  line2?: string
+  city: string
+  region?: string
+  postalCode: string
+}
+
 export interface MealOrderDTO {
   id: string
   name: string
   email: string
   phone?: string
   notes?: string
+  /** Ready-by slot for pickup, delivery window start for delivery. */
   pickupAt: string
+  /** Optional so orders from older services read as pickup. */
+  fulfillment?: 'pickup' | 'delivery'
+  deliveryAddress?: DeliveryAddressDTO | null
+  deliveryFeeCents?: number
   items: MealOrderLineDTO[]
   subtotalCents: number
   totalCents: number
@@ -781,6 +804,7 @@ export interface MealOrderDTO {
   posSyncError?: string | null
   /** Public order lookups carry these for the order page. */
   pickupInstructions?: string | null
+  deliveryInstructions?: string | null
   timezone?: string
 }
 
@@ -818,6 +842,12 @@ export interface OrderingConfigDTO {
   notifyEmail?: string
   /** Charge online through the owner's connected Stripe account (default true). */
   collectPayment?: boolean
+  /** How orders reach the customer. Default ['pickup']. */
+  fulfillment?: Array<'pickup' | 'delivery'>
+  deliveryFeeCents?: number
+  deliveryMinimumCents?: number
+  deliveryArea?: string
+  deliveryInstructions?: string
 }
 
 // --- Ticketing (Marquee Events add-on) ---
