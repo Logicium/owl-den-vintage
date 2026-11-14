@@ -11,6 +11,9 @@ interface ImportMetaEnv {
   readonly VITE_SITE_SLUG?: string
   /** This site's immutable UUID. Preferred over slug for content lookups. */
   readonly VITE_SITE_ID?: string
+  /** The site's public https origin, set by the provisioner (custom domain wins);
+   *  the canonical, sitemap and share URLs are built on it. */
+  readonly VITE_SITE_URL?: string
   /** Google Maps API key (Geocoding + Embed APIs). Required for the address map picker in admin. */
   readonly VITE_GOOGLE_MAPS_API_KEY?: string
 }

@@ -3,7 +3,6 @@ import { computed, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { siteConfig } from './config/site.config'
 import { useSiteTheme } from '@apotome/archetype-shared/composables/useSiteTheme'
-import { useSiteSeo } from '@apotome/archetype-shared/platform/seo'
 import { useImagePreload } from '@apotome/archetype-shared/composables/useImagePreload'
 import { useApScrollbar } from '@apotome/archetype-shared/composables/useApScrollbar'
 import { usePreferences } from '@apotome/archetype-shared/composables/usePreferences'
@@ -16,22 +15,8 @@ import ThemeSwitcher from '@apotome/archetype-shared/components/ThemeSwitcher.vu
 
 const { initFromConfig } = useSiteTheme()
 
-/* Title, description, social cards, favicon and LocalBusiness data follow the
-   owner's content (brand, tagline, blurb, contact, hero photo) and change per
-   page; dashboard, checkout and order pages stay out of search. */
-useSiteSeo({
-  site: siteConfig,
-  archetype: 'shop',
-  page: (route) => {
-    const s = siteConfig.sections
-    switch (route.name) {
-      case 'shop': return { title: s.shopPage.title, description: s.shopPage.subtitle }
-      case 'gallery': return { title: s.galleryPage.title }
-      case 'visit': return { title: 'Visit', description: `Find ${siteConfig.brand} at ${siteConfig.contact.address}. Hours, directions and how to reach us.` }
-      default: return null
-    }
-  },
-})
+/* Title, description, cards and JSON-LD follow the route table (src/routes.ts)
+   through installSeo in main.ts; the build wrote the same tags per page. */
 const { isReady, progress, loaded, total, label, preloadCritical } = useImagePreload()
 
 onMounted(async () => {

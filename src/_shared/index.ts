@@ -16,6 +16,14 @@ export * from './platform/siteContentStore'
 export * from './platform/activeSiteStore'
 export * from './platform/adminAuthStore'
 
+// SEO (the Apotome Labs SEO + AEO standard). The module itself is imported by
+// subpath, `@apotome/archetype-shared/seo/index` and `.../seo/node`, because its
+// schema input types share names with the content client's; the body helpers
+// (`.../seo/bodies`) stay on their subpath too, their names are short. These
+// are the archetype-specific pieces around the module.
+export * from './seo/siteConfig'
+export * from './seo/nodes'
+
 // Composables
 export * from './composables/useSiteTheme'
 export * from './composables/usePreferences'

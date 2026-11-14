@@ -16,7 +16,7 @@ withDefaults(defineProps<{
   alt?: string
   loading?: 'lazy' | 'eager'
 }>(), {
-  loading: 'eager',
+  loading: 'lazy',
 })
 </script>
 

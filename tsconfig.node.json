@@ -6,7 +6,21 @@
     "vitest.config.*",
     "cypress.config.*",
     "playwright.config.*",
-    "eslint.config.*"
+    "eslint.config.*",
+    // the SEO module's Node half: beside this template in the monorepo,
+    // vendored into src/_shared in a published site
+    "../archetype-shared/src/seo/node.ts",
+    "src/_shared/seo/node.ts",
+    "../archetype-shared/src/seo/prerender.ts",
+    "src/_shared/seo/prerender.ts",
+    "../archetype-shared/src/seo/browser.ts",
+    "src/_shared/seo/browser.ts",
+    "../archetype-shared/src/seo/expand.ts",
+    "src/_shared/seo/expand.ts",
+    "../archetype-shared/src/seo/vercel.ts",
+    "src/_shared/seo/vercel.ts",
+    "../archetype-shared/src/seo/build.ts",
+    "src/_shared/seo/build.ts"
   ],
   "compilerOptions": {
     // Most tools use transpilation instead of Node.js's native type-stripping.
